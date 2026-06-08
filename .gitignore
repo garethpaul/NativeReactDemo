@@ -23,6 +23,11 @@ DerivedData
 project.xcworkspace
 *.local.xcconfig
 *.secrets.xcconfig
+*.mobileprovision
+*.p12
+*.cer
+*.p8
+.xcode.env.local
 .env
 .env.*
 

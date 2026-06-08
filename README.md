@@ -68,7 +68,9 @@ release `main.jsbundle` wiring, plist/XML validity, and local secret ignore rule
 ## Configuration and Secrets
 
 - Fabric/Crashlytics credentials, signing material, local xcconfig files, `.env` files, and private endpoints should stay out of git.
-- Release builds load `iOS/main.jsbundle`; regenerate that bundle intentionally when JavaScript changes need to ship without the packager.
+- Release builds load `iOS/main.jsbundle`; the checked-in bundle is a
+  placeholder, so regenerate it intentionally when JavaScript changes need to
+  ship without the packager.
 
 ## Security and Privacy Notes
 

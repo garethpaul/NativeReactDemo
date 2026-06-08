@@ -61,7 +61,17 @@ def main() -> int:
         failures.append("Info.plist must not contain an empty location usage string")
 
     gitignore = read(".gitignore")
-    for expected in ["node_modules/", "*.local.xcconfig", "*.secrets.xcconfig", ".env"]:
+    for expected in [
+        "node_modules/",
+        "*.local.xcconfig",
+        "*.secrets.xcconfig",
+        "*.mobileprovision",
+        "*.p12",
+        "*.cer",
+        "*.p8",
+        ".xcode.env.local",
+        ".env",
+    ]:
         if expected not in gitignore:
             failures.append(f".gitignore must include {expected}")
 
@@ -75,6 +85,8 @@ def main() -> int:
     for phrase in ["make check", "Fabric/Crashlytics", "main.jsbundle"]:
         if phrase not in docs:
             failures.append(f"docs must mention {phrase}")
+    if "Offline JS file is empty" in read("iOS/main.jsbundle") and "placeholder" not in read("README.md"):
+        failures.append("README must document the checked-in main.jsbundle placeholder")
 
     if failures:
         for failure in failures:
