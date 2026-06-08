@@ -1,5 +1,8 @@
 ## Native React Demo Vision
 
+This document explains the current state and direction of the project.
+Project overview and developer docs: [`README.md`](README.md)
+
 Native React Demo is an early React Native iOS sample with a bundled iOS app,
 React Native 0.4-era JavaScript, and Fabric/Crashlytics frameworks.
 
