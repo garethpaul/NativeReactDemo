@@ -87,4 +87,4 @@ Keep changes small and tied to the project that is already present in this repos
 
 Prior README summary:
 
-> NativeReactDemo <!-- README-OVERVIEW-IMAGE --> Adding files for ReactNative.
+> NativeReactDemo Adding files for ReactNative.
