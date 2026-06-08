@@ -1,5 +1,8 @@
 # NativeReactDemo
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 ## Overview
 
 `garethpaul/NativeReactDemo` is an Apple platform application or Objective-C/Swift sample. NativeReactDemo
@@ -85,4 +88,3 @@ Keep changes small and tied to the project that is already present in this repos
 Prior README summary:
 
 > NativeReactDemo <!-- README-OVERVIEW-IMAGE --> Adding files for ReactNative.
-
