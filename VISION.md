@@ -43,3 +43,6 @@ control. JavaScript bundles should not include secrets or private endpoints.
 - Broad React Native migrations without a plan
 - Generated artifacts whose ownership is unclear
 - Build changes that make the sample unrecoverable
+
+This list is a roadmap guardrail, not a permanent rule.
+Strong user demand and strong technical rationale can change it.
