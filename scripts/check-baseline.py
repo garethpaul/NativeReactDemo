@@ -55,6 +55,8 @@ def main() -> int:
     tests = read("WowNativeReactTests/WowNativeReactTests.m")
     if 'TEXT_TO_LOOK_FOR @"Hi"' not in tests:
         failures.append("Xcode UI test must look for the text rendered by index.ios.js")
+    if "textForView:" not in tests or "@selector(text)" not in tests:
+        failures.append("Xcode UI test must handle both attributedText and text views")
 
     info = plistlib.loads((ROOT / "iOS/Info.plist").read_bytes())
     if info.get("NSLocationWhenInUseUsageDescription") == "":

@@ -37,6 +37,25 @@
   return NO;
 }
 
+- (NSString *)textForView:(UIView *)view
+{
+  if ([view respondsToSelector:@selector(attributedText)]) {
+    NSAttributedString *attributedText = [(id)view attributedText];
+    if (attributedText.string.length > 0) {
+      return attributedText.string;
+    }
+  }
+
+  if ([view respondsToSelector:@selector(text)]) {
+    NSString *text = [(id)view text];
+    if (text.length > 0) {
+      return text;
+    }
+  }
+
+  return nil;
+}
+
 - (void)testRendersWelcomeScreen {
   UIViewController *vc = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
   NSDate *date = [NSDate dateWithTimeIntervalSinceNow:TIMEOUT_SECONDS];
@@ -50,13 +69,8 @@
     redboxError = [[RCTRedBox sharedInstance] currentErrorMessage];
 
     foundElement = [self findSubviewInView:vc.view matching:^BOOL(UIView *view) {
-      if ([view respondsToSelector:@selector(attributedText)]) {
-        NSString *text = [(id)view attributedText].string;
-        if ([text isEqualToString:TEXT_TO_LOOK_FOR]) {
-          return YES;
-        }
-      }
-      return NO;
+      NSString *text = [self textForView:view];
+      return [text isEqualToString:TEXT_TO_LOOK_FOR];
     }];
   }
 

@@ -8,4 +8,5 @@
 - Removed an unused insecure HTTP image URL from the JavaScript sample.
 - Removed the empty location usage string and added local secret/config ignore rules.
 - Aligned the Xcode UI test with the rendered `Hi` text.
+- Broadened the Xcode UI test to recognize both attributed and plain text views.
 - Documented Fabric/Crashlytics credential handling and release bundle ownership.
