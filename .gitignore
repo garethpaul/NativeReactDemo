@@ -21,6 +21,10 @@ DerivedData
 *.ipa
 *.xcuserstate
 project.xcworkspace
+*.local.xcconfig
+*.secrets.xcconfig
+.env
+.env.*
 
 # node.js
 #

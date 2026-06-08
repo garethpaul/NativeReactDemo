@@ -57,13 +57,18 @@ Detected npm scripts:
 
 ## Testing and Verification
 
+- `make check`
+- `npm run check`
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
+The static check verifies React Native pinning, DEBUG-only localhost bundle loading,
+release `main.jsbundle` wiring, plist/XML validity, and local secret ignore rules.
 
 ## Configuration and Secrets
 
-- Detected references to Twitter. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
+- Fabric/Crashlytics credentials, signing material, local xcconfig files, `.env` files, and private endpoints should stay out of git.
+- Release builds load `iOS/main.jsbundle`; regenerate that bundle intentionally when JavaScript changes need to ship without the packager.
 
 ## Security and Privacy Notes
 
@@ -76,6 +81,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Maintenance Notes
 
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
+- Run `make check` before pushing JavaScript, plist, Xcode project, dependency, or security documentation changes.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 

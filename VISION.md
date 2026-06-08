@@ -12,6 +12,11 @@ layout and iOS integration. Project context lives in [`README.md`](README.md).
 The goal is to keep the demo understandable while making legacy dependency and
 credential assumptions clear.
 
+Current baseline: `make check` runs `scripts/check-baseline.py` to verify
+React Native dependency pinning, DEBUG-only localhost bundle loading, release
+`main.jsbundle` wiring, plist/XML validity, local secret ignores, and
+Fabric/Crashlytics documentation.
+
 The current focus is:
 
 Priority:
@@ -19,14 +24,15 @@ Priority:
 - Preserve the React Native iOS bridge and app structure
 - Keep `npm start` and package metadata visible for the old toolchain
 - Avoid committing Fabric/Crashlytics credentials or signing material
+- Keep localhost packager loading DEBUG-only and release bundle ownership explicit
 - Maintain security policy for the sample
 
 Next priorities:
 
 - Add README setup and supported Node/Xcode notes
 - Modernize React Native only in a dedicated migration
-- Add a simple verification path for launching the iOS app
-- Clarify whether generated bundles should remain checked in
+- Add a manual launch checklist for the iOS app on a matching Xcode simulator
+- Regenerate `main.jsbundle` in a dedicated change when JavaScript behavior changes
 
 Contribution rules:
 
