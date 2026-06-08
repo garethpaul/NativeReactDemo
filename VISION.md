@@ -37,7 +37,7 @@ Contribution rules:
 Crash-reporting credentials and signing material must remain out of source
 control. JavaScript bundles should not include secrets or private endpoints.
 
-## What We Will Not Merge For Now
+## What We Will Not Merge (For Now)
 
 - Hardcoded service credentials
 - Broad React Native migrations without a plan
