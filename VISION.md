@@ -32,6 +32,7 @@ Priority:
 - Keep the bundle module guard around malformed release bundles
 - Keep the release bundle file URL guard around release bundle loading
 - Keep the exact bundle registration guard tied to the launched module name
+- Keep the bundle module name guard before release bundle registration checks
 - Keep lint, test, build, and check gates on the SDK-free static baseline
 - Maintain security policy for the sample
 
@@ -70,6 +71,8 @@ The release bundle file URL guard should fail closed when release startup
 resolves anything other than a local bundle file.
 The exact bundle registration guard should fail closed unless the release
 bundle registers the same module that `RCTRootView` launches.
+The bundle module name guard should fail closed when the expected module name is
+blank or whitespace-only.
 
 ## What We Will Not Merge (For Now)
 

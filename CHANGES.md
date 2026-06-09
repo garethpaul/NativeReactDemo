@@ -10,6 +10,8 @@
   non-local JavaScript bundle URLs.
 - Added an exact bundle registration guard so release startup requires
   `AppRegistry.registerComponent` to register the launched module name.
+- Added a bundle module name guard so registration checks fail closed when the
+  expected module name is blank.
 - Added `make check` and `npm run check` static verification for the legacy React Native iOS sample.
 - Pinned the React Native dependency to `0.4.2` for reproducible legacy installs.
 - Gated localhost packager bundle loading to debug builds and kept release builds pointed at `main.jsbundle`.

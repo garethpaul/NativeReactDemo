@@ -32,6 +32,7 @@ REQUIRED = [
     "docs/plans/2026-06-09-release-bundle-module-guard.md",
     "docs/plans/2026-06-09-release-bundle-file-url-guard.md",
     "docs/plans/2026-06-09-exact-bundle-registration-guard.md",
+    "docs/plans/2026-06-09-bundle-module-name-guard.md",
 ]
 
 
@@ -92,6 +93,13 @@ def main() -> int:
         or "moduleName:NativeReactModuleName" not in app_delegate
     ):
         failures.append("AppDelegate must validate exact React Native bundle module registration")
+    if (
+        "NSString *trimmedModuleName = [moduleName stringByTrimmingCharactersInSet:" not in app_delegate
+        or "trimmedModuleName.length == 0" not in app_delegate
+        or 'NSString *singleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\'%@\'", trimmedModuleName];' not in app_delegate
+        or 'NSString *doubleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\\"%@\\"", trimmedModuleName];' not in app_delegate
+    ):
+        failures.append("AppDelegate must reject blank bundle module names before registration checks")
 
     js = read("index.ios.js")
     if re.search(r"http://", js):
@@ -144,6 +152,8 @@ def main() -> int:
         failures.append("docs must mention release bundle file URL guard handling")
     if "exact bundle registration guard" not in docs:
         failures.append("docs must mention exact bundle registration guard handling")
+    if "bundle module name guard" not in docs:
+        failures.append("docs must mention bundle module name guard handling")
     if "placeholder bundle guard" not in changes:
         failures.append("CHANGES must mention placeholder bundle guard handling")
     if "blank bundle guard" not in changes:
@@ -154,6 +164,8 @@ def main() -> int:
         failures.append("CHANGES must mention release bundle file URL guard handling")
     if "exact bundle registration guard" not in changes:
         failures.append("CHANGES must mention exact bundle registration guard handling")
+    if "bundle module name guard" not in changes:
+        failures.append("CHANGES must mention bundle module name guard handling")
     if "make lint" not in changes or "make test" not in changes or "make build" not in changes or "make check" not in changes:
         failures.append("CHANGES must mention standard Make gate aliases")
     if "Offline JS file is empty" in read("iOS/main.jsbundle") and "placeholder" not in read("README.md"):
@@ -182,6 +194,10 @@ def main() -> int:
     registration_plan = registration_plan_path.read_text(encoding="utf-8") if registration_plan_path.exists() else ""
     if "status: completed" not in registration_plan:
         failures.append("exact bundle registration guard plan must be marked completed")
+    module_name_plan_path = ROOT / "docs/plans/2026-06-09-bundle-module-name-guard.md"
+    module_name_plan = module_name_plan_path.read_text(encoding="utf-8") if module_name_plan_path.exists() else ""
+    if "status: completed" not in module_name_plan:
+        failures.append("bundle module name guard plan must be marked completed")
     make_gate_plan_path = ROOT / "docs/plans/2026-06-09-make-gate-aliases.md"
     make_gate_plan = make_gate_plan_path.read_text(encoding="utf-8") if make_gate_plan_path.exists() else ""
     if "status: completed" not in make_gate_plan:

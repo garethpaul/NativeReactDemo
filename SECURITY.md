@@ -42,6 +42,8 @@ Helpful reports include:
   resolves anything other than a local JavaScript bundle file.
 - The exact bundle registration guard should fail closed unless release
   JavaScript registers the same module name used for `RCTRootView` startup.
+- The bundle module name guard should fail closed before registration checks if
+  the expected React Native module name is blank or whitespace-only.
 
 ## Mobile Privacy Notes
 
@@ -58,6 +60,8 @@ Reports should also note whether the release bundle file URL guard rejects
 non-local JavaScript bundle URLs before `RCTRootView` startup.
 Reports should also note whether the exact bundle registration guard rejects
 malformed JavaScript that only mentions the module name without registering it.
+Reports should also note whether the bundle module name guard rejects blank or
+whitespace-only expected module names before release bundle registration checks.
 
 ## Dependency and Supply Chain Security
 

@@ -84,6 +84,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   React Native startup.
 - The exact bundle registration guard requires the release bundle to register
   the same `WowNativeReact` module used to create `RCTRootView`.
+- The bundle module name guard fails registration checks closed if the expected
+  React Native module name is blank or whitespace-only.
 
 ## Security and Privacy Notes
 
@@ -95,6 +97,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   a local `main.jsbundle`.
 - Keep the exact bundle registration guard in place so malformed release
   bundles cannot satisfy module checks with unrelated strings.
+- Keep the bundle module name guard in place so blank expected module names do
+  not satisfy release bundle checks.
 - Review changes touching mobile permissions or privacy-sensitive device data; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h.
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h, Fabric.framework/Info.plist, WowNativeReactTests/Info.plist, iOS/Info.plist, and 1 more.
 
@@ -106,6 +110,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   changes.
 - See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias
   baseline.
+- See `docs/plans/2026-06-09-bundle-module-name-guard.md` for the bundle module
+  name guardrail.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 

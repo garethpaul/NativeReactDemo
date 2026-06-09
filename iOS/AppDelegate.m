@@ -21,8 +21,14 @@ static NSString * const NativeReactModuleName = @"WowNativeReact";
     return NO;
   }
 
-  NSString *singleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent('%@'", moduleName];
-  NSString *doubleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\"%@\"", moduleName];
+  NSString *trimmedModuleName = [moduleName stringByTrimmingCharactersInSet:
+                                 [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+  if (trimmedModuleName.length == 0) {
+    return NO;
+  }
+
+  NSString *singleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent('%@'", trimmedModuleName];
+  NSString *doubleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\"%@\"", trimmedModuleName];
   return [bundleContents rangeOfString:singleQuotedRegistration].location != NSNotFound ||
       [bundleContents rangeOfString:doubleQuotedRegistration].location != NSNotFound;
 }
