@@ -42,6 +42,10 @@ Additional scan context:
 git clone https://github.com/garethpaul/NativeReactDemo.git
 cd NativeReactDemo
 npm install
+make lint
+make test
+make build
+make check
 ```
 
 The setup commands above are derived from repository files. Legacy mobile, Python, or JavaScript samples may require older SDKs or package versions than a modern workstation uses by default.
@@ -57,7 +61,8 @@ Detected npm scripts:
 
 ## Testing and Verification
 
-- `make check`
+- `make lint`, `make test`, `make build`, and `make check` run the SDK-free
+  static baseline.
 - `npm run check`
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 
@@ -88,7 +93,11 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
 ## Maintenance Notes
 
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
-- Run `make check` before pushing JavaScript, plist, Xcode project, dependency, or security documentation changes.
+- Run `make lint`, `make test`, `make build`, and `make check` before pushing
+  JavaScript, plist, Xcode project, dependency, or security documentation
+  changes.
+- See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias
+  baseline.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 

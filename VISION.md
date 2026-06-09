@@ -12,10 +12,11 @@ layout and iOS integration. Project context lives in [`README.md`](README.md).
 The goal is to keep the demo understandable while making legacy dependency and
 credential assumptions clear.
 
-Current baseline: `make check` runs `scripts/check-baseline.py` to verify
-React Native dependency pinning, DEBUG-only localhost bundle loading, release
-`main.jsbundle` wiring, the release bundle guard, the blank bundle guard,
-plist/XML validity, local secret ignores, and Fabric/Crashlytics documentation.
+Current baseline: `make lint`, `make test`, `make build`, and `make check` run
+`scripts/check-baseline.py` to verify React Native dependency pinning,
+DEBUG-only localhost bundle loading, release `main.jsbundle` wiring, the
+release bundle guard, the blank bundle guard, plist/XML validity, local secret
+ignores, and Fabric/Crashlytics documentation.
 
 The current focus is:
 
@@ -29,6 +30,7 @@ Priority:
 - Keep the placeholder bundle guard around checked-in empty release bundles
 - Keep the blank bundle guard around missing or whitespace-only release bundles
 - Keep the bundle module guard around malformed release bundles
+- Keep lint, test, build, and check gates on the SDK-free static baseline
 - Maintain security policy for the sample
 
 Next priorities:

@@ -2,6 +2,8 @@
 
 ## 2026-06-08
 
+- Added `make lint`, `make test`, and `make build` aliases so the standard
+  gate commands run the same SDK-free static baseline as `make check`.
 - Added a bundle module guard so release startup fails closed when a bundle does
   not register `WowNativeReact`.
 - Added `make check` and `npm run check` static verification for the legacy React Native iOS sample.

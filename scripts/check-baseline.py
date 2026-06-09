@@ -28,6 +28,7 @@ REQUIRED = [
     "docs/plans/2026-06-08-placeholder-bundle-guard.md",
     "docs/plans/2026-06-08-release-bundle-guard.md",
     "docs/plans/2026-06-09-blank-bundle-guard.md",
+    "docs/plans/2026-06-09-make-gate-aliases.md",
     "docs/plans/2026-06-09-release-bundle-module-guard.md",
 ]
 
@@ -43,6 +44,15 @@ def main() -> int:
             failures.append(f"required file missing: {path}")
 
     package = json.loads(read("package.json"))
+    makefile = read("Makefile")
+    for target in [
+        ".PHONY: build check lint static-check test verify",
+        "check: static-check",
+        "lint test build verify: static-check",
+    ]:
+        if target not in makefile:
+            failures.append(f"Makefile must expose target contract: {target}")
+
     if package.get("dependencies", {}).get("react-native") != "0.4.2":
         failures.append("react-native dependency must stay pinned to 0.4.2")
     if package.get("scripts", {}).get("check") != "python3 scripts/check-baseline.py":
@@ -106,7 +116,7 @@ def main() -> int:
 
     docs = read("README.md") + "\n" + read("VISION.md") + "\n" + read("SECURITY.md")
     changes = read("CHANGES.md")
-    for phrase in ["make check", "Fabric/Crashlytics", "main.jsbundle"]:
+    for phrase in ["make lint", "make test", "make build", "make check", "Fabric/Crashlytics", "main.jsbundle"]:
         if phrase not in docs:
             failures.append(f"docs must mention {phrase}")
     if "release bundle guard" not in docs:
@@ -123,6 +133,8 @@ def main() -> int:
         failures.append("CHANGES must mention blank bundle guard handling")
     if "bundle module guard" not in changes:
         failures.append("CHANGES must mention bundle module guard handling")
+    if "make lint" not in changes or "make test" not in changes or "make build" not in changes or "make check" not in changes:
+        failures.append("CHANGES must mention standard Make gate aliases")
     if "Offline JS file is empty" in read("iOS/main.jsbundle") and "placeholder" not in read("README.md"):
         failures.append("README must document the checked-in main.jsbundle placeholder")
 
@@ -141,6 +153,10 @@ def main() -> int:
     module_plan = module_plan_path.read_text(encoding="utf-8") if module_plan_path.exists() else ""
     if "status: completed" not in module_plan:
         failures.append("bundle module guard plan must be marked completed")
+    make_gate_plan_path = ROOT / "docs/plans/2026-06-09-make-gate-aliases.md"
+    make_gate_plan = make_gate_plan_path.read_text(encoding="utf-8") if make_gate_plan_path.exists() else ""
+    if "status: completed" not in make_gate_plan:
+        failures.append("Make gate alias plan must be marked completed")
 
     if failures:
         for failure in failures:
