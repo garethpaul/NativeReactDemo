@@ -25,6 +25,7 @@ REQUIRED = [
     "WowNativeReactTests/WowNativeReactTests.m",
     "docs/plans/2026-06-08-native-react-demo-baseline.md",
     "docs/plans/2026-06-08-native-react-test-baseline.md",
+    "docs/plans/2026-06-08-placeholder-bundle-guard.md",
     "docs/plans/2026-06-08-release-bundle-guard.md",
 ]
 
@@ -52,6 +53,10 @@ def main() -> int:
         failures.append("AppDelegate must load main.jsbundle outside DEBUG")
     if "jsCodeLocation == nil" not in app_delegate or "return NO;" not in app_delegate:
         failures.append("AppDelegate must fail closed when the JavaScript bundle URL is unavailable")
+    if "isPlaceholderBundleAtURL:" not in app_delegate or "Offline JS file is empty" not in app_delegate:
+        failures.append("AppDelegate must fail closed when release resolves the placeholder JavaScript bundle")
+    if "#ifndef DEBUG" not in app_delegate:
+        failures.append("placeholder JavaScript bundle guard must stay outside DEBUG builds")
 
     js = read("index.ios.js")
     if re.search(r"http://", js):
@@ -88,17 +93,26 @@ def main() -> int:
             failures.append(f"{xml_path} must parse as XML: {error}")
 
     docs = read("README.md") + "\n" + read("VISION.md") + "\n" + read("SECURITY.md")
+    changes = read("CHANGES.md")
     for phrase in ["make check", "Fabric/Crashlytics", "main.jsbundle"]:
         if phrase not in docs:
             failures.append(f"docs must mention {phrase}")
     if "release bundle guard" not in docs:
         failures.append("docs must mention release bundle guard handling")
+    if "placeholder bundle guard" not in docs:
+        failures.append("docs must mention placeholder bundle guard handling")
+    if "placeholder bundle guard" not in changes:
+        failures.append("CHANGES must mention placeholder bundle guard handling")
     if "Offline JS file is empty" in read("iOS/main.jsbundle") and "placeholder" not in read("README.md"):
         failures.append("README must document the checked-in main.jsbundle placeholder")
 
     release_plan = read("docs/plans/2026-06-08-release-bundle-guard.md")
     if "status: completed" not in release_plan:
         failures.append("release bundle guard plan must be marked completed")
+    placeholder_plan_path = ROOT / "docs/plans/2026-06-08-placeholder-bundle-guard.md"
+    placeholder_plan = placeholder_plan_path.read_text(encoding="utf-8") if placeholder_plan_path.exists() else ""
+    if "status: completed" not in placeholder_plan:
+        failures.append("placeholder bundle guard plan must be marked completed")
 
     if failures:
         for failure in failures:

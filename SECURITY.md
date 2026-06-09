@@ -35,13 +35,15 @@ Helpful reports include:
 - Fabric/Crashlytics credentials, signing material, local xcconfig files, `.env` files, and private endpoints should stay out of git.
 - Release builds should use the checked-in `main.jsbundle` intentionally, while localhost packager loading should remain DEBUG-only.
 - The release bundle guard should fail closed if startup cannot resolve a JavaScript bundle URL.
+- The placeholder bundle guard should fail closed if release startup resolves the checked-in empty JavaScript bundle.
 
 ## Mobile Privacy Notes
 
 If this project requests device permissions such as location, camera, microphone, contacts, Bluetooth, health data, or local storage access, reports should describe the permission involved and whether sensitive data can be accessed, persisted, or transmitted unexpectedly. Please avoid testing against real third-party user data or accounts you do not control.
 
 For this app, bundle-loading reports should include whether the release bundle
-guard prevents nil JavaScript bundle URLs from reaching `RCTRootView`.
+guard prevents nil JavaScript bundle URLs from reaching `RCTRootView`, and
+whether the placeholder bundle guard rejects the checked-in empty bundle.
 
 ## Dependency and Supply Chain Security
 

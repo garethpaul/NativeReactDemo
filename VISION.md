@@ -26,6 +26,7 @@ Priority:
 - Avoid committing Fabric/Crashlytics credentials or signing material
 - Keep localhost packager loading DEBUG-only and release bundle ownership explicit
 - Keep the release bundle guard in app startup
+- Keep the placeholder bundle guard around checked-in empty release bundles
 - Maintain security policy for the sample
 
 Next priorities:
@@ -53,6 +54,8 @@ Crash-reporting credentials and signing material must remain out of source
 control. JavaScript bundles should not include secrets or private endpoints.
 The release bundle guard should fail closed if the app cannot resolve a
 JavaScript bundle URL.
+The placeholder bundle guard should also fail closed when `main.jsbundle` still
+contains the checked-in empty bundle instructions.
 
 ## What We Will Not Merge (For Now)
 

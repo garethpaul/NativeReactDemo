@@ -72,6 +72,7 @@ release `main.jsbundle` wiring, the release bundle guard, plist/XML validity, an
   placeholder, so regenerate it intentionally when JavaScript changes need to
   ship without the packager.
 - The release bundle guard returns safely during launch if no JavaScript bundle URL is available.
+- The placeholder bundle guard also fails closed if release startup resolves the checked-in empty bundle.
 
 ## Security and Privacy Notes
 

@@ -6,6 +6,7 @@
 - Pinned the React Native dependency to `0.4.2` for reproducible legacy installs.
 - Gated localhost packager bundle loading to debug builds and kept release builds pointed at `main.jsbundle`.
 - Added a release bundle guard before creating the React Native root view.
+- Added a placeholder bundle guard so release startup fails closed when `main.jsbundle` is still the checked-in placeholder.
 - Removed an unused insecure HTTP image URL from the JavaScript sample.
 - Removed the empty location usage string and added local secret/config ignore rules.
 - Aligned the Xcode UI test with the rendered `Hi` text.

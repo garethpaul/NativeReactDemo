@@ -13,6 +13,19 @@
 
 @implementation AppDelegate
 
+- (BOOL)isPlaceholderBundleAtURL:(NSURL *)bundleURL
+{
+  NSError *error = nil;
+  NSString *bundleContents = [NSString stringWithContentsOfURL:bundleURL
+                                                      encoding:NSUTF8StringEncoding
+                                                         error:&error];
+  if (bundleContents == nil) {
+    return YES;
+  }
+
+  return [bundleContents rangeOfString:@"Offline JS file is empty"].location != NSNotFound;
+}
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
   
@@ -41,6 +54,12 @@
   if (jsCodeLocation == nil) {
     return NO;
   }
+
+#ifndef DEBUG
+  if ([self isPlaceholderBundleAtURL:jsCodeLocation]) {
+    return NO;
+  }
+#endif
 
   /**
    * OPTION 2
