@@ -40,6 +40,8 @@ Helpful reports include:
 - The bundle module guard should fail closed if release startup resolves JavaScript that does not register `WowNativeReact`.
 - The release bundle file URL guard should fail closed if release startup
   resolves anything other than a local JavaScript bundle file.
+- The exact bundle registration guard should fail closed unless release
+  JavaScript registers the same module name used for `RCTRootView` startup.
 
 ## Mobile Privacy Notes
 
@@ -54,6 +56,8 @@ Reports should also note whether the bundle module guard rejects malformed
 release JavaScript before `RCTRootView` startup.
 Reports should also note whether the release bundle file URL guard rejects
 non-local JavaScript bundle URLs before `RCTRootView` startup.
+Reports should also note whether the exact bundle registration guard rejects
+malformed JavaScript that only mentions the module name without registering it.
 
 ## Dependency and Supply Chain Security
 

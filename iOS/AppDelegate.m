@@ -11,7 +11,21 @@
 
 #import "RCTRootView.h"
 
+static NSString * const NativeReactModuleName = @"WowNativeReact";
+
 @implementation AppDelegate
+
+- (BOOL)bundleContents:(NSString *)bundleContents registersModule:(NSString *)moduleName
+{
+  if (bundleContents == nil || moduleName == nil) {
+    return NO;
+  }
+
+  NSString *singleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent('%@'", moduleName];
+  NSString *doubleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\"%@\"", moduleName];
+  return [bundleContents rangeOfString:singleQuotedRegistration].location != NSNotFound ||
+      [bundleContents rangeOfString:doubleQuotedRegistration].location != NSNotFound;
+}
 
 - (BOOL)isPlaceholderBundleAtURL:(NSURL *)bundleURL
 {
@@ -36,8 +50,7 @@
     return YES;
   }
 
-  if ([bundleContents rangeOfString:@"AppRegistry.registerComponent"].location == NSNotFound ||
-      [bundleContents rangeOfString:@"WowNativeReact"].location == NSNotFound) {
+  if (![self bundleContents:bundleContents registersModule:NativeReactModuleName]) {
     return YES;
   }
 
@@ -90,7 +103,7 @@
    */
 
   RCTRootView *rootView = [[RCTRootView alloc] initWithBundleURL:jsCodeLocation
-                                                      moduleName:@"WowNativeReact"
+                                                      moduleName:NativeReactModuleName
                                                    launchOptions:launchOptions];
 
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];

@@ -82,6 +82,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
 - The bundle module guard treats release bundles without the expected `WowNativeReact` registration as unsafe.
 - The release bundle file URL guard rejects non-local release bundle URLs before
   React Native startup.
+- The exact bundle registration guard requires the release bundle to register
+  the same `WowNativeReact` module used to create `RCTRootView`.
 
 ## Security and Privacy Notes
 
@@ -91,6 +93,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
 - Keep the release bundle guard in place when changing `iOS/AppDelegate.m` bundle loading.
 - Keep the release bundle file URL guard in place so release startup only uses
   a local `main.jsbundle`.
+- Keep the exact bundle registration guard in place so malformed release
+  bundles cannot satisfy module checks with unrelated strings.
 - Review changes touching mobile permissions or privacy-sensitive device data; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h.
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h, Fabric.framework/Info.plist, WowNativeReactTests/Info.plist, iOS/Info.plist, and 1 more.
 
