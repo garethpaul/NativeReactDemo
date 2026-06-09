@@ -38,6 +38,10 @@
   jsCodeLocation = [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
 #endif
 
+  if (jsCodeLocation == nil) {
+    return NO;
+  }
+
   /**
    * OPTION 2
    * Load from pre-bundled file on disk. To re-generate the static bundle

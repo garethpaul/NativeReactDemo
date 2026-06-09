@@ -63,7 +63,7 @@ Detected npm scripts:
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 The static check verifies React Native pinning, DEBUG-only localhost bundle loading,
-release `main.jsbundle` wiring, plist/XML validity, and local secret ignore rules.
+release `main.jsbundle` wiring, the release bundle guard, plist/XML validity, and local secret ignore rules.
 
 ## Configuration and Secrets
 
@@ -71,12 +71,14 @@ release `main.jsbundle` wiring, plist/XML validity, and local secret ignore rule
 - Release builds load `iOS/main.jsbundle`; the checked-in bundle is a
   placeholder, so regenerate it intentionally when JavaScript changes need to
   ship without the packager.
+- The release bundle guard returns safely during launch if no JavaScript bundle URL is available.
 
 ## Security and Privacy Notes
 
 - Review changes touching authentication or token handling; examples from the scan include Crashlytics.framework/Headers/CLSLogging.h, Crashlytics.framework/Headers/CLSReport.h.
 - Review changes touching external API calls or credential-adjacent configuration; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h, Fabric.framework/Headers/FABAttributes.h, Fabric.framework/Headers/Fabric.h, Fabric.framework/Info.plist.
 - Review changes touching network requests, sockets, or service endpoints; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h, Fabric.framework/Info.plist, WowNativeReactTests/Info.plist, iOS/AppDelegate.m, and 2 more.
+- Keep the release bundle guard in place when changing `iOS/AppDelegate.m` bundle loading.
 - Review changes touching mobile permissions or privacy-sensitive device data; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h.
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h, Fabric.framework/Info.plist, WowNativeReactTests/Info.plist, iOS/Info.plist, and 1 more.
 

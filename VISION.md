@@ -14,8 +14,8 @@ credential assumptions clear.
 
 Current baseline: `make check` runs `scripts/check-baseline.py` to verify
 React Native dependency pinning, DEBUG-only localhost bundle loading, release
-`main.jsbundle` wiring, plist/XML validity, local secret ignores, and
-Fabric/Crashlytics documentation.
+`main.jsbundle` wiring, the release bundle guard, plist/XML validity, local
+secret ignores, and Fabric/Crashlytics documentation.
 
 The current focus is:
 
@@ -25,6 +25,7 @@ Priority:
 - Keep `npm start` and package metadata visible for the old toolchain
 - Avoid committing Fabric/Crashlytics credentials or signing material
 - Keep localhost packager loading DEBUG-only and release bundle ownership explicit
+- Keep the release bundle guard in app startup
 - Maintain security policy for the sample
 
 Next priorities:
@@ -40,6 +41,7 @@ Contribution rules:
 - Keep credentials and generated signing files out of git.
 - Verify the app after bridge or bundle changes.
 - Do not mix React Native major migrations with app behavior changes.
+- Preserve the release bundle guard when changing `AppDelegate` startup.
 
 ## Security
 
@@ -49,6 +51,8 @@ Canonical security policy and reporting:
 
 Crash-reporting credentials and signing material must remain out of source
 control. JavaScript bundles should not include secrets or private endpoints.
+The release bundle guard should fail closed if the app cannot resolve a
+JavaScript bundle URL.
 
 ## What We Will Not Merge (For Now)
 

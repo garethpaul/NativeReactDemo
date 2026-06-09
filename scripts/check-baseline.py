@@ -24,6 +24,8 @@ REQUIRED = [
     "WowNativeReact.xcodeproj/project.pbxproj",
     "WowNativeReactTests/WowNativeReactTests.m",
     "docs/plans/2026-06-08-native-react-demo-baseline.md",
+    "docs/plans/2026-06-08-native-react-test-baseline.md",
+    "docs/plans/2026-06-08-release-bundle-guard.md",
 ]
 
 
@@ -48,6 +50,8 @@ def main() -> int:
         failures.append("AppDelegate must gate localhost bundle loading to DEBUG builds")
     if 'URLForResource:@"main" withExtension:@"jsbundle"' not in app_delegate:
         failures.append("AppDelegate must load main.jsbundle outside DEBUG")
+    if "jsCodeLocation == nil" not in app_delegate or "return NO;" not in app_delegate:
+        failures.append("AppDelegate must fail closed when the JavaScript bundle URL is unavailable")
 
     js = read("index.ios.js")
     if re.search(r"http://", js):
@@ -87,8 +91,14 @@ def main() -> int:
     for phrase in ["make check", "Fabric/Crashlytics", "main.jsbundle"]:
         if phrase not in docs:
             failures.append(f"docs must mention {phrase}")
+    if "release bundle guard" not in docs:
+        failures.append("docs must mention release bundle guard handling")
     if "Offline JS file is empty" in read("iOS/main.jsbundle") and "placeholder" not in read("README.md"):
         failures.append("README must document the checked-in main.jsbundle placeholder")
+
+    release_plan = read("docs/plans/2026-06-08-release-bundle-guard.md")
+    if "status: completed" not in release_plan:
+        failures.append("release bundle guard plan must be marked completed")
 
     if failures:
         for failure in failures:
