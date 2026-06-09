@@ -74,6 +74,7 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
 - The release bundle guard returns safely during launch if no JavaScript bundle URL is available.
 - The placeholder bundle guard also fails closed if release startup resolves the checked-in empty bundle.
 - The blank bundle guard treats missing, empty, or whitespace-only release bundle content as an unsafe placeholder.
+- The bundle module guard treats release bundles without the expected `WowNativeReact` registration as unsafe.
 
 ## Security and Privacy Notes
 

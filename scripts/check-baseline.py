@@ -28,6 +28,7 @@ REQUIRED = [
     "docs/plans/2026-06-08-placeholder-bundle-guard.md",
     "docs/plans/2026-06-08-release-bundle-guard.md",
     "docs/plans/2026-06-09-blank-bundle-guard.md",
+    "docs/plans/2026-06-09-release-bundle-module-guard.md",
 ]
 
 
@@ -66,6 +67,8 @@ def main() -> int:
     )
     if not has_blank_bundle_guard:
         failures.append("placeholder bundle helper must reject blank or whitespace-only bundle contents")
+    if "AppRegistry.registerComponent" not in app_delegate or "WowNativeReact" not in app_delegate:
+        failures.append("placeholder bundle helper must reject release bundles without the expected module registration")
 
     js = read("index.ios.js")
     if re.search(r"http://", js):
@@ -112,10 +115,14 @@ def main() -> int:
         failures.append("docs must mention placeholder bundle guard handling")
     if "blank bundle guard" not in docs:
         failures.append("docs must mention blank bundle guard handling")
+    if "bundle module guard" not in docs:
+        failures.append("docs must mention bundle module guard handling")
     if "placeholder bundle guard" not in changes:
         failures.append("CHANGES must mention placeholder bundle guard handling")
     if "blank bundle guard" not in changes:
         failures.append("CHANGES must mention blank bundle guard handling")
+    if "bundle module guard" not in changes:
+        failures.append("CHANGES must mention bundle module guard handling")
     if "Offline JS file is empty" in read("iOS/main.jsbundle") and "placeholder" not in read("README.md"):
         failures.append("README must document the checked-in main.jsbundle placeholder")
 
@@ -130,6 +137,10 @@ def main() -> int:
     blank_plan = blank_plan_path.read_text(encoding="utf-8") if blank_plan_path.exists() else ""
     if "status: completed" not in blank_plan:
         failures.append("blank bundle guard plan must be marked completed")
+    module_plan_path = ROOT / "docs/plans/2026-06-09-release-bundle-module-guard.md"
+    module_plan = module_plan_path.read_text(encoding="utf-8") if module_plan_path.exists() else ""
+    if "status: completed" not in module_plan:
+        failures.append("bundle module guard plan must be marked completed")
 
     if failures:
         for failure in failures:

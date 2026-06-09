@@ -33,6 +33,11 @@
     return YES;
   }
 
+  if ([bundleContents rangeOfString:@"AppRegistry.registerComponent"].location == NSNotFound ||
+      [bundleContents rangeOfString:@"WowNativeReact"].location == NSNotFound) {
+    return YES;
+  }
+
   return [bundleContents rangeOfString:@"Offline JS file is empty"].location != NSNotFound;
 }
 
