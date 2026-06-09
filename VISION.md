@@ -30,6 +30,7 @@ Priority:
 - Keep the placeholder bundle guard around checked-in empty release bundles
 - Keep the blank bundle guard around missing or whitespace-only release bundles
 - Keep the bundle module guard around malformed release bundles
+- Keep the release bundle file URL guard around release bundle loading
 - Keep lint, test, build, and check gates on the SDK-free static baseline
 - Maintain security policy for the sample
 
@@ -64,6 +65,8 @@ The blank bundle guard should fail closed when bundle contents are missing,
 empty, or whitespace only.
 The bundle module guard should fail closed when a release bundle does not
 register the expected `WowNativeReact` module.
+The release bundle file URL guard should fail closed when release startup
+resolves anything other than a local bundle file.
 
 ## What We Will Not Merge (For Now)
 

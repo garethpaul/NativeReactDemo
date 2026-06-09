@@ -38,6 +38,8 @@ Helpful reports include:
 - The placeholder bundle guard should fail closed if release startup resolves the checked-in empty JavaScript bundle.
 - The blank bundle guard should fail closed if release startup resolves missing, empty, or whitespace-only JavaScript bundle content.
 - The bundle module guard should fail closed if release startup resolves JavaScript that does not register `WowNativeReact`.
+- The release bundle file URL guard should fail closed if release startup
+  resolves anything other than a local JavaScript bundle file.
 
 ## Mobile Privacy Notes
 
@@ -50,6 +52,8 @@ Reports should also note whether the blank bundle guard rejects missing, empty,
 or whitespace-only bundle content before `RCTRootView` startup.
 Reports should also note whether the bundle module guard rejects malformed
 release JavaScript before `RCTRootView` startup.
+Reports should also note whether the release bundle file URL guard rejects
+non-local JavaScript bundle URLs before `RCTRootView` startup.
 
 ## Dependency and Supply Chain Security
 

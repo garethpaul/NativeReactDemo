@@ -30,6 +30,7 @@ REQUIRED = [
     "docs/plans/2026-06-09-blank-bundle-guard.md",
     "docs/plans/2026-06-09-make-gate-aliases.md",
     "docs/plans/2026-06-09-release-bundle-module-guard.md",
+    "docs/plans/2026-06-09-release-bundle-file-url-guard.md",
 ]
 
 
@@ -71,6 +72,8 @@ def main() -> int:
         failures.append("placeholder JavaScript bundle guard must stay outside DEBUG builds")
     if "bundleURL == nil" not in app_delegate:
         failures.append("placeholder bundle helper must fail closed when called with a nil URL")
+    if "![bundleURL isFileURL]" not in app_delegate:
+        failures.append("placeholder bundle helper must fail closed when release bundle URL is not local")
     has_blank_bundle_guard = (
         "stringByTrimmingCharactersInSet" in app_delegate
         and "whitespaceAndNewlineCharacterSet" in app_delegate
@@ -127,12 +130,16 @@ def main() -> int:
         failures.append("docs must mention blank bundle guard handling")
     if "bundle module guard" not in docs:
         failures.append("docs must mention bundle module guard handling")
+    if "release bundle file URL guard" not in docs:
+        failures.append("docs must mention release bundle file URL guard handling")
     if "placeholder bundle guard" not in changes:
         failures.append("CHANGES must mention placeholder bundle guard handling")
     if "blank bundle guard" not in changes:
         failures.append("CHANGES must mention blank bundle guard handling")
     if "bundle module guard" not in changes:
         failures.append("CHANGES must mention bundle module guard handling")
+    if "release bundle file URL guard" not in changes:
+        failures.append("CHANGES must mention release bundle file URL guard handling")
     if "make lint" not in changes or "make test" not in changes or "make build" not in changes or "make check" not in changes:
         failures.append("CHANGES must mention standard Make gate aliases")
     if "Offline JS file is empty" in read("iOS/main.jsbundle") and "placeholder" not in read("README.md"):
@@ -153,6 +160,10 @@ def main() -> int:
     module_plan = module_plan_path.read_text(encoding="utf-8") if module_plan_path.exists() else ""
     if "status: completed" not in module_plan:
         failures.append("bundle module guard plan must be marked completed")
+    file_url_plan_path = ROOT / "docs/plans/2026-06-09-release-bundle-file-url-guard.md"
+    file_url_plan = file_url_plan_path.read_text(encoding="utf-8") if file_url_plan_path.exists() else ""
+    if "status: completed" not in file_url_plan:
+        failures.append("release bundle file URL guard plan must be marked completed")
     make_gate_plan_path = ROOT / "docs/plans/2026-06-09-make-gate-aliases.md"
     make_gate_plan = make_gate_plan_path.read_text(encoding="utf-8") if make_gate_plan_path.exists() else ""
     if "status: completed" not in make_gate_plan:

@@ -80,6 +80,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
 - The placeholder bundle guard also fails closed if release startup resolves the checked-in empty bundle.
 - The blank bundle guard treats missing, empty, or whitespace-only release bundle content as an unsafe placeholder.
 - The bundle module guard treats release bundles without the expected `WowNativeReact` registration as unsafe.
+- The release bundle file URL guard rejects non-local release bundle URLs before
+  React Native startup.
 
 ## Security and Privacy Notes
 
@@ -87,6 +89,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
 - Review changes touching external API calls or credential-adjacent configuration; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h, Fabric.framework/Headers/FABAttributes.h, Fabric.framework/Headers/Fabric.h, Fabric.framework/Info.plist.
 - Review changes touching network requests, sockets, or service endpoints; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h, Fabric.framework/Info.plist, WowNativeReactTests/Info.plist, iOS/AppDelegate.m, and 2 more.
 - Keep the release bundle guard in place when changing `iOS/AppDelegate.m` bundle loading.
+- Keep the release bundle file URL guard in place so release startup only uses
+  a local `main.jsbundle`.
 - Review changes touching mobile permissions or privacy-sensitive device data; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h.
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h, Fabric.framework/Info.plist, WowNativeReactTests/Info.plist, iOS/Info.plist, and 1 more.
 

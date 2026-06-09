@@ -6,6 +6,8 @@
   gate commands run the same SDK-free static baseline as `make check`.
 - Added a bundle module guard so release startup fails closed when a bundle does
   not register `WowNativeReact`.
+- Added a release bundle file URL guard so release startup fails closed on
+  non-local JavaScript bundle URLs.
 - Added `make check` and `npm run check` static verification for the legacy React Native iOS sample.
 - Pinned the React Native dependency to `0.4.2` for reproducible legacy installs.
 - Gated localhost packager bundle loading to debug builds and kept release builds pointed at `main.jsbundle`.

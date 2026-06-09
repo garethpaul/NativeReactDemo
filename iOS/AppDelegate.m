@@ -18,6 +18,9 @@
   if (bundleURL == nil) {
     return YES;
   }
+  if (![bundleURL isFileURL]) {
+    return YES;
+  }
 
   NSError *error = nil;
   NSString *bundleContents = [NSString stringWithContentsOfURL:bundleURL
