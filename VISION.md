@@ -14,8 +14,8 @@ credential assumptions clear.
 
 Current baseline: `make check` runs `scripts/check-baseline.py` to verify
 React Native dependency pinning, DEBUG-only localhost bundle loading, release
-`main.jsbundle` wiring, the release bundle guard, plist/XML validity, local
-secret ignores, and Fabric/Crashlytics documentation.
+`main.jsbundle` wiring, the release bundle guard, the blank bundle guard,
+plist/XML validity, local secret ignores, and Fabric/Crashlytics documentation.
 
 The current focus is:
 
@@ -27,6 +27,7 @@ Priority:
 - Keep localhost packager loading DEBUG-only and release bundle ownership explicit
 - Keep the release bundle guard in app startup
 - Keep the placeholder bundle guard around checked-in empty release bundles
+- Keep the blank bundle guard around missing or whitespace-only release bundles
 - Maintain security policy for the sample
 
 Next priorities:
@@ -56,6 +57,8 @@ The release bundle guard should fail closed if the app cannot resolve a
 JavaScript bundle URL.
 The placeholder bundle guard should also fail closed when `main.jsbundle` still
 contains the checked-in empty bundle instructions.
+The blank bundle guard should fail closed when bundle contents are missing,
+empty, or whitespace only.
 
 ## What We Will Not Merge (For Now)
 

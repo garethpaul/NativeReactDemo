@@ -36,6 +36,7 @@ Helpful reports include:
 - Release builds should use the checked-in `main.jsbundle` intentionally, while localhost packager loading should remain DEBUG-only.
 - The release bundle guard should fail closed if startup cannot resolve a JavaScript bundle URL.
 - The placeholder bundle guard should fail closed if release startup resolves the checked-in empty JavaScript bundle.
+- The blank bundle guard should fail closed if release startup resolves missing, empty, or whitespace-only JavaScript bundle content.
 
 ## Mobile Privacy Notes
 
@@ -44,6 +45,8 @@ If this project requests device permissions such as location, camera, microphone
 For this app, bundle-loading reports should include whether the release bundle
 guard prevents nil JavaScript bundle URLs from reaching `RCTRootView`, and
 whether the placeholder bundle guard rejects the checked-in empty bundle.
+Reports should also note whether the blank bundle guard rejects missing, empty,
+or whitespace-only bundle content before `RCTRootView` startup.
 
 ## Dependency and Supply Chain Security
 

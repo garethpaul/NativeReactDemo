@@ -63,7 +63,7 @@ Detected npm scripts:
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 The static check verifies React Native pinning, DEBUG-only localhost bundle loading,
-release `main.jsbundle` wiring, the release bundle guard, plist/XML validity, and local secret ignore rules.
+release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard, plist/XML validity, and local secret ignore rules.
 
 ## Configuration and Secrets
 
@@ -73,6 +73,7 @@ release `main.jsbundle` wiring, the release bundle guard, plist/XML validity, an
   ship without the packager.
 - The release bundle guard returns safely during launch if no JavaScript bundle URL is available.
 - The placeholder bundle guard also fails closed if release startup resolves the checked-in empty bundle.
+- The blank bundle guard treats missing, empty, or whitespace-only release bundle content as an unsafe placeholder.
 
 ## Security and Privacy Notes
 

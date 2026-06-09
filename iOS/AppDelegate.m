@@ -15,11 +15,21 @@
 
 - (BOOL)isPlaceholderBundleAtURL:(NSURL *)bundleURL
 {
+  if (bundleURL == nil) {
+    return YES;
+  }
+
   NSError *error = nil;
   NSString *bundleContents = [NSString stringWithContentsOfURL:bundleURL
                                                       encoding:NSUTF8StringEncoding
                                                          error:&error];
   if (bundleContents == nil) {
+    return YES;
+  }
+
+  NSString *trimmedBundleContents = [bundleContents stringByTrimmingCharactersInSet:
+                                     [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+  if (trimmedBundleContents.length == 0) {
     return YES;
   }
 
