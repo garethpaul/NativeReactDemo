@@ -35,6 +35,7 @@ Priority:
 - Keep the bundle module name guard before release bundle registration checks
 - Keep the release bundle resource guard around Xcode resource wiring
 - Keep lint, test, build, and check gates on the SDK-free static baseline
+- Keep hosted macOS project parsing pinned, read-only, and free of npm install
 - Maintain security policy for the sample
 
 Next priorities:

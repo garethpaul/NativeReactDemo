@@ -5,6 +5,8 @@ from pathlib import Path
 import json
 import plistlib
 import re
+import shutil
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
@@ -12,6 +14,7 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED = [
     ".gitignore",
+    ".github/workflows/check.yml",
     "Makefile",
     "README.md",
     "SECURITY.md",
@@ -34,6 +37,7 @@ REQUIRED = [
     "docs/plans/2026-06-09-exact-bundle-registration-guard.md",
     "docs/plans/2026-06-09-bundle-module-name-guard.md",
     "docs/plans/2026-06-10-release-bundle-resource-guard.md",
+    "docs/plans/2026-06-10-hosted-project-validation.md",
 ]
 
 
@@ -217,6 +221,34 @@ def main() -> int:
     resource_plan = resource_plan_path.read_text(encoding="utf-8") if resource_plan_path.exists() else ""
     if "status: completed" not in resource_plan:
         failures.append("release bundle resource guard plan must be marked completed")
+
+    hosted_plan = read("docs/plans/2026-06-10-hosted-project-validation.md")
+    workflow = read(".github/workflows/check.yml")
+    if "status: completed" not in hosted_plan or "make check" not in hosted_plan:
+        failures.append("hosted project validation plan must be marked completed")
+    for expected in [
+        "permissions:\n  contents: read",
+        "cancel-in-progress: true",
+        "runs-on: macos-15",
+        "timeout-minutes: 10",
+        "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10",
+        "run: make check",
+    ]:
+        if expected not in workflow:
+            failures.append(f"Check workflow must keep {expected}")
+
+    if shutil.which("xcodebuild"):
+        result = subprocess.run(
+            ["xcodebuild", "-list", "-project", "WowNativeReact.xcodeproj"],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if result.returncode != 0:
+            failures.append("xcodebuild could not parse WowNativeReact.xcodeproj: " + result.stderr.strip())
+    else:
+        print("xcodebuild unavailable; static iOS baseline only.")
 
     if failures:
         for failure in failures:

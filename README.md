@@ -63,6 +63,9 @@ Detected npm scripts:
 
 - `make lint`, `make test`, `make build`, and `make check` run the SDK-free
   static baseline.
+- Pinned `macos-15` GitHub Actions runs that baseline and parses
+  `WowNativeReact.xcodeproj` without npm install, credentials, vendored script
+  execution, build, signing, simulator launch, or application execution.
 - `npm run check`
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 
