@@ -36,6 +36,9 @@ Helpful reports include:
   npm install, credentials, vendored script execution, build, signing,
   simulator launch, or application execution.
 - Fabric/Crashlytics credentials, signing material, local xcconfig files, `.env` files, and private endpoints should stay out of git.
+- Vendored framework integrity is checked against
+  `VENDORED_FRAMEWORKS.sha256`; matching hashes detect replacement but do not
+  establish provenance, support status, or safety of these legacy binaries.
 - Release builds should use the checked-in `main.jsbundle` intentionally, while localhost packager loading should remain DEBUG-only.
 - The release bundle guard should fail closed if startup cannot resolve a JavaScript bundle URL.
 - The placeholder bundle guard should fail closed if release startup resolves the checked-in empty JavaScript bundle.

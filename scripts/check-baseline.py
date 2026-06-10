@@ -2,6 +2,7 @@
 """Static baseline checks for the legacy React Native iOS demo."""
 
 from pathlib import Path
+import hashlib
 import json
 import plistlib
 import re
@@ -19,11 +20,17 @@ REQUIRED = [
     "README.md",
     "SECURITY.md",
     "VISION.md",
+    "VENDORED_FRAMEWORKS.sha256",
     "package.json",
     "index.ios.js",
     "iOS/AppDelegate.m",
     "iOS/Info.plist",
     "iOS/main.jsbundle",
+    "Fabric.framework/Fabric",
+    "Fabric.framework/run",
+    "Crashlytics.framework/Crashlytics",
+    "Crashlytics.framework/run",
+    "Crashlytics.framework/submit",
     "WowNativeReact.xcodeproj/project.pbxproj",
     "WowNativeReactTests/WowNativeReactTests.m",
     "docs/plans/2026-06-08-native-react-demo-baseline.md",
@@ -38,7 +45,16 @@ REQUIRED = [
     "docs/plans/2026-06-09-bundle-module-name-guard.md",
     "docs/plans/2026-06-10-release-bundle-resource-guard.md",
     "docs/plans/2026-06-10-hosted-project-validation.md",
+    "docs/plans/2026-06-10-vendored-framework-integrity.md",
 ]
+
+VENDORED_EXECUTABLES = {
+    "Fabric.framework/Fabric",
+    "Fabric.framework/run",
+    "Crashlytics.framework/Crashlytics",
+    "Crashlytics.framework/run",
+    "Crashlytics.framework/submit",
+}
 
 
 def read(path: str) -> str:
@@ -65,6 +81,27 @@ def main() -> int:
         failures.append("react-native dependency must stay pinned to 0.4.2")
     if package.get("scripts", {}).get("check") != "python3 scripts/check-baseline.py":
         failures.append("package.json must expose npm run check")
+
+    manifest_entries = {}
+    for line_number, line in enumerate(read("VENDORED_FRAMEWORKS.sha256").splitlines(), 1):
+        parts = line.split("  ", 1)
+        if len(parts) != 2 or re.fullmatch(r"[0-9a-f]{64}", parts[0]) is None or not parts[1]:
+            failures.append(f"VENDORED_FRAMEWORKS.sha256 line {line_number} is malformed")
+            continue
+        digest, relative_path = parts
+        if relative_path in manifest_entries:
+            failures.append(f"VENDORED_FRAMEWORKS.sha256 duplicates {relative_path}")
+            continue
+        manifest_entries[relative_path] = digest
+    if set(manifest_entries) != VENDORED_EXECUTABLES:
+        failures.append("VENDORED_FRAMEWORKS.sha256 must list exactly the vendored executable artifacts")
+    for relative_path in VENDORED_EXECUTABLES:
+        path = ROOT / relative_path
+        if not path.is_file() or relative_path not in manifest_entries:
+            continue
+        actual_digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual_digest != manifest_entries[relative_path]:
+            failures.append(f"vendored framework integrity mismatch: {relative_path}")
 
     app_delegate = read("iOS/AppDelegate.m")
     project = read("WowNativeReact.xcodeproj/project.pbxproj")
@@ -167,6 +204,8 @@ def main() -> int:
         failures.append("docs must mention bundle module name guard handling")
     if "release bundle resource guard" not in docs:
         failures.append("docs must mention release bundle resource guard handling")
+    if "vendored framework integrity" not in docs.lower():
+        failures.append("docs must mention vendored framework integrity handling")
     if "placeholder bundle guard" not in changes:
         failures.append("CHANGES must mention placeholder bundle guard handling")
     if "blank bundle guard" not in changes:
@@ -181,6 +220,8 @@ def main() -> int:
         failures.append("CHANGES must mention bundle module name guard handling")
     if "release bundle resource guard" not in changes:
         failures.append("CHANGES must mention release bundle resource guard handling")
+    if "vendored framework integrity" not in changes.lower():
+        failures.append("CHANGES must mention vendored framework integrity handling")
     if "make lint" not in changes or "make test" not in changes or "make build" not in changes or "make check" not in changes:
         failures.append("CHANGES must mention standard Make gate aliases")
     if "Offline JS file is empty" in read("iOS/main.jsbundle") and "placeholder" not in read("README.md"):
@@ -221,6 +262,9 @@ def main() -> int:
     resource_plan = resource_plan_path.read_text(encoding="utf-8") if resource_plan_path.exists() else ""
     if "status: completed" not in resource_plan:
         failures.append("release bundle resource guard plan must be marked completed")
+    integrity_plan = read("docs/plans/2026-06-10-vendored-framework-integrity.md")
+    if "status: completed" not in integrity_plan or "VENDORED_FRAMEWORKS.sha256" not in integrity_plan:
+        failures.append("vendored framework integrity plan must be completed and name the manifest")
 
     hosted_plan = read("docs/plans/2026-06-10-hosted-project-validation.md")
     workflow = read(".github/workflows/check.yml")

@@ -106,6 +106,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   not satisfy release bundle checks.
 - Keep the release bundle resource guard in place so release builds still ship
   the local `main.jsbundle` file.
+- Vendored framework integrity checks verify the recorded SHA-256 hashes for
+  Fabric, Crashlytics, and their executable build tools before project parsing.
 - Review changes touching mobile permissions or privacy-sensitive device data; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h.
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h, Fabric.framework/Info.plist, WowNativeReactTests/Info.plist, iOS/Info.plist, and 1 more.
 
