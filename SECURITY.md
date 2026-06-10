@@ -44,6 +44,8 @@ Helpful reports include:
   JavaScript registers the same module name used for `RCTRootView` startup.
 - The bundle module name guard should fail closed before registration checks if
   the expected React Native module name is blank or whitespace-only.
+- The release bundle resource guard should keep `iOS/main.jsbundle` in the app
+  target resources so release startup does not depend on a missing bundle.
 
 ## Mobile Privacy Notes
 
@@ -62,6 +64,8 @@ Reports should also note whether the exact bundle registration guard rejects
 malformed JavaScript that only mentions the module name without registering it.
 Reports should also note whether the bundle module name guard rejects blank or
 whitespace-only expected module names before release bundle registration checks.
+Reports should also note whether the release bundle resource guard catches
+project changes that stop packaging `iOS/main.jsbundle`.
 
 ## Dependency and Supply Chain Security
 

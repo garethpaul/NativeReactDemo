@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-10
+
+- Added a release bundle resource guard so the static baseline catches Xcode
+  project changes that stop packaging `iOS/main.jsbundle`.
+
 ## 2026-06-08
 
 - Added `make lint`, `make test`, and `make build` aliases so the standard

@@ -33,6 +33,7 @@ Priority:
 - Keep the release bundle file URL guard around release bundle loading
 - Keep the exact bundle registration guard tied to the launched module name
 - Keep the bundle module name guard before release bundle registration checks
+- Keep the release bundle resource guard around Xcode resource wiring
 - Keep lint, test, build, and check gates on the SDK-free static baseline
 - Maintain security policy for the sample
 
@@ -73,6 +74,8 @@ The exact bundle registration guard should fail closed unless the release
 bundle registers the same module that `RCTRootView` launches.
 The bundle module name guard should fail closed when the expected module name is
 blank or whitespace-only.
+The release bundle resource guard should keep `iOS/main.jsbundle` copied into
+the app target resources that release startup expects.
 
 ## What We Will Not Merge (For Now)
 

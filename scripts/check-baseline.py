@@ -33,6 +33,7 @@ REQUIRED = [
     "docs/plans/2026-06-09-release-bundle-file-url-guard.md",
     "docs/plans/2026-06-09-exact-bundle-registration-guard.md",
     "docs/plans/2026-06-09-bundle-module-name-guard.md",
+    "docs/plans/2026-06-10-release-bundle-resource-guard.md",
 ]
 
 
@@ -62,6 +63,7 @@ def main() -> int:
         failures.append("package.json must expose npm run check")
 
     app_delegate = read("iOS/AppDelegate.m")
+    project = read("WowNativeReact.xcodeproj/project.pbxproj")
     if "#if DEBUG" not in app_delegate or "#else" not in app_delegate:
         failures.append("AppDelegate must gate localhost bundle loading to DEBUG builds")
     if 'URLForResource:@"main" withExtension:@"jsbundle"' not in app_delegate:
@@ -100,6 +102,11 @@ def main() -> int:
         or 'NSString *doubleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\\"%@\\"", trimmedModuleName];' not in app_delegate
     ):
         failures.append("AppDelegate must reject blank bundle module names before registration checks")
+    if (
+        "path = iOS/main.jsbundle" not in project
+        or "main.jsbundle in Resources" not in project
+    ):
+        failures.append("Xcode project must copy iOS/main.jsbundle into app resources")
 
     js = read("index.ios.js")
     if re.search(r"http://", js):
@@ -154,6 +161,8 @@ def main() -> int:
         failures.append("docs must mention exact bundle registration guard handling")
     if "bundle module name guard" not in docs:
         failures.append("docs must mention bundle module name guard handling")
+    if "release bundle resource guard" not in docs:
+        failures.append("docs must mention release bundle resource guard handling")
     if "placeholder bundle guard" not in changes:
         failures.append("CHANGES must mention placeholder bundle guard handling")
     if "blank bundle guard" not in changes:
@@ -166,6 +175,8 @@ def main() -> int:
         failures.append("CHANGES must mention exact bundle registration guard handling")
     if "bundle module name guard" not in changes:
         failures.append("CHANGES must mention bundle module name guard handling")
+    if "release bundle resource guard" not in changes:
+        failures.append("CHANGES must mention release bundle resource guard handling")
     if "make lint" not in changes or "make test" not in changes or "make build" not in changes or "make check" not in changes:
         failures.append("CHANGES must mention standard Make gate aliases")
     if "Offline JS file is empty" in read("iOS/main.jsbundle") and "placeholder" not in read("README.md"):
@@ -202,6 +213,10 @@ def main() -> int:
     make_gate_plan = make_gate_plan_path.read_text(encoding="utf-8") if make_gate_plan_path.exists() else ""
     if "status: completed" not in make_gate_plan:
         failures.append("Make gate alias plan must be marked completed")
+    resource_plan_path = ROOT / "docs/plans/2026-06-10-release-bundle-resource-guard.md"
+    resource_plan = resource_plan_path.read_text(encoding="utf-8") if resource_plan_path.exists() else ""
+    if "status: completed" not in resource_plan:
+        failures.append("release bundle resource guard plan must be marked completed")
 
     if failures:
         for failure in failures:

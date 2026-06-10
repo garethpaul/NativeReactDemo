@@ -86,6 +86,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   the same `WowNativeReact` module used to create `RCTRootView`.
 - The bundle module name guard fails registration checks closed if the expected
   React Native module name is blank or whitespace-only.
+- The release bundle resource guard keeps `iOS/main.jsbundle` wired into the
+  app target resources that release startup loads.
 
 ## Security and Privacy Notes
 
@@ -99,6 +101,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   bundles cannot satisfy module checks with unrelated strings.
 - Keep the bundle module name guard in place so blank expected module names do
   not satisfy release bundle checks.
+- Keep the release bundle resource guard in place so release builds still ship
+  the local `main.jsbundle` file.
 - Review changes touching mobile permissions or privacy-sensitive device data; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h.
 - Review changes touching file, media, JSON, XML, CSV, OCR, or data parsing; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h, Fabric.framework/Info.plist, WowNativeReactTests/Info.plist, iOS/Info.plist, and 1 more.
 
