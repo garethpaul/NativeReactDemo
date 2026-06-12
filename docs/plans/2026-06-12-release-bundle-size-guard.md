@@ -55,7 +55,12 @@ Completed locally on 2026-06-12:
 - `git diff --check`
 
 `xcodebuild` is unavailable on this Linux host, so local verification is static.
-Hosted push and pull-request checks will be recorded after the branch is pushed.
+
+Completed on hosted macOS for implementation head
+`d116a38df9e34209458ebd4f1f874a91955cb376`:
+
+- push run `27397502614`: success
+- pull-request run `27397504019`: success
 
 ## Boundaries
 
