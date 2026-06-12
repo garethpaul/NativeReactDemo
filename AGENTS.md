@@ -47,6 +47,7 @@
 ## Safety and gotchas
 
 - Fabric/Crashlytics credentials, signing material, local xcconfig files, `.env` files, and private endpoints should stay out of git.
+- `VENDORED_FRAMEWORKS.sha256` pins the executable Fabric/Crashlytics artifacts; update it only after an intentional, reviewed binary replacement.
 - Release builds load `iOS/main.jsbundle`; the checked-in bundle is a placeholder, so regenerate it intentionally when JavaScript changes need to ship without the packager.
 - The release bundle guard returns safely during launch if no JavaScript bundle URL is available.
 - The placeholder bundle guard also fails closed if release startup resolves the checked-in empty bundle.

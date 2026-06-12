@@ -34,7 +34,9 @@ Priority:
 - Keep the exact bundle registration guard tied to the launched module name
 - Keep the bundle module name guard before release bundle registration checks
 - Keep the release bundle resource guard around Xcode resource wiring
+- Keep vendored framework integrity hashes for Fabric/Crashlytics executables
 - Keep lint, test, build, and check gates on the SDK-free static baseline
+- Keep hosted macOS project parsing pinned, read-only, and free of npm install
 - Maintain security policy for the sample
 
 Next priorities:
@@ -76,6 +78,9 @@ The bundle module name guard should fail closed when the expected module name is
 blank or whitespace-only.
 The release bundle resource guard should keep `iOS/main.jsbundle` copied into
 the app target resources that release startup expects.
+Vendored framework integrity checks should detect changes to Fabric,
+Crashlytics, and their executable build tools without claiming those legacy
+artifacts are trusted or supported.
 
 ## What We Will Not Merge (For Now)
 
