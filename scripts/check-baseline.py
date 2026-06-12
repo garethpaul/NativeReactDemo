@@ -47,6 +47,7 @@ REQUIRED = [
     "docs/plans/2026-06-10-hosted-project-validation.md",
     "docs/plans/2026-06-10-vendored-framework-integrity.md",
     "docs/plans/2026-06-12-release-bundle-size-guard.md",
+    "docs/plans/2026-06-12-checkout-credential-boundary.md",
 ]
 
 VENDORED_EXECUTABLES = {
@@ -294,6 +295,37 @@ def main() -> int:
     ]:
         if expected not in workflow:
             failures.append(f"Check workflow must keep {expected}")
+
+    checkout_plan = read("docs/plans/2026-06-12-checkout-credential-boundary.md")
+    if (
+        "status: completed" not in checkout_plan
+        or "persist-credentials: false" not in checkout_plan
+        or "hostile mutations rejected" not in checkout_plan
+    ):
+        failures.append("checkout credential plan must record completed verification")
+    workflow_files = sorted(
+        path.relative_to(ROOT).as_posix()
+        for path in (ROOT / ".github/workflows").iterdir()
+        if path.is_file()
+    )
+    if workflow_files != [".github/workflows/check.yml"]:
+        failures.append("workflow inventory must contain only .github/workflows/check.yml")
+    checkout_step = (
+        "      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10\n"
+        "        with:\n"
+        "          persist-credentials: false"
+    )
+    if workflow.count("actions/checkout@") != 1 or checkout_step not in workflow:
+        failures.append("Check workflow must keep one pinned credential-free checkout step")
+    if "persist-credentials: true" in workflow:
+        failures.append("Check workflow must not persist checkout credentials")
+
+    guidance = " ".join(
+        "\n".join(read(path) for path in ["README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]).split()
+    ).lower()
+    for phrase in ["checkout credentials are not persisted", "credential-free checkout"]:
+        if phrase not in guidance:
+            failures.append(f"repository guidance must mention {phrase}")
 
     if shutil.which("xcodebuild"):
         result = subprocess.run(

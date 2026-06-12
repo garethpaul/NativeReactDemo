@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-12
+
+- Disabled persisted checkout credentials and enforced the sole pinned
+  credential-free workflow boundary.
+
 ## 2026-06-10
 
 - Added a release bundle size guard that rejects missing file metadata or more

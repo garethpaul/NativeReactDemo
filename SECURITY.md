@@ -33,8 +33,10 @@ Helpful reports include:
 - Dependency manifests detected: package.json. Dependency updates should preserve lockfiles when present and avoid introducing packages without a clear maintenance reason.
 - Run `make lint`, `make test`, `make build`, and `make check` after changing JavaScript, plist files, Xcode project metadata, Fabric/Crashlytics setup, or security docs.
 - The pinned macOS workflow runs only static checks and project parsing without
-  npm install, credentials, vendored script execution, build, signing,
+  npm install, service credentials, vendored script execution, build, signing,
   simulator launch, or application execution.
+- The hosted gate uses a credential-free checkout so its read-only token is not
+  retained in the runner's Git configuration.
 - Fabric/Crashlytics credentials, signing material, local xcconfig files, `.env` files, and private endpoints should stay out of git.
 - Vendored framework integrity is checked against
   `VENDORED_FRAMEWORKS.sha256`; matching hashes detect replacement but do not

@@ -38,6 +38,7 @@ Priority:
 - Keep vendored framework integrity hashes for Fabric/Crashlytics executables
 - Keep lint, test, build, and check gates on the SDK-free static baseline
 - Keep hosted macOS project parsing pinned, read-only, and free of npm install
+- Keep hosted source retrieval credential-free after checkout
 - Maintain security policy for the sample
 
 Next priorities:
