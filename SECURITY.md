@@ -52,6 +52,8 @@ Helpful reports include:
   the expected React Native module name is blank or whitespace-only.
 - The release bundle resource guard should keep `iOS/main.jsbundle` in the app
   target resources so release startup does not depend on a missing bundle.
+- The release bundle size guard should reject missing file metadata and local
+  JavaScript bundles larger than 10 MiB before reading their contents.
 
 ## Mobile Privacy Notes
 

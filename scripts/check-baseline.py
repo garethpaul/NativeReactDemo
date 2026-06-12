@@ -46,6 +46,7 @@ REQUIRED = [
     "docs/plans/2026-06-10-release-bundle-resource-guard.md",
     "docs/plans/2026-06-10-hosted-project-validation.md",
     "docs/plans/2026-06-10-vendored-framework-integrity.md",
+    "docs/plans/2026-06-12-release-bundle-size-guard.md",
 ]
 
 VENDORED_EXECUTABLES = {
@@ -119,6 +120,14 @@ def main() -> int:
         failures.append("placeholder bundle helper must fail closed when called with a nil URL")
     if "![bundleURL isFileURL]" not in app_delegate:
         failures.append("placeholder bundle helper must fail closed when release bundle URL is not local")
+    size_limit_index = app_delegate.find("MaximumReleaseBundleBytes = 10ULL * 1024ULL * 1024ULL")
+    attributes_index = app_delegate.find("attributesOfItemAtPath:[bundleURL path]")
+    size_guard_index = app_delegate.find("[bundleSize unsignedLongLongValue] > MaximumReleaseBundleBytes")
+    contents_read_index = app_delegate.find("stringWithContentsOfURL:bundleURL")
+    if not (0 <= size_limit_index < attributes_index < size_guard_index < contents_read_index):
+        failures.append("release bundle size guard must fail closed before reading bundle contents")
+    if "bundleAttributes == nil || bundleSize == nil" not in app_delegate:
+        failures.append("release bundle size guard must fail closed when file metadata is unavailable")
     has_blank_bundle_guard = (
         "stringByTrimmingCharactersInSet" in app_delegate
         and "whitespaceAndNewlineCharacterSet" in app_delegate
@@ -204,6 +213,8 @@ def main() -> int:
         failures.append("docs must mention bundle module name guard handling")
     if "release bundle resource guard" not in docs:
         failures.append("docs must mention release bundle resource guard handling")
+    if "release bundle size guard" not in docs:
+        failures.append("docs must mention release bundle size guard handling")
     if "vendored framework integrity" not in docs.lower():
         failures.append("docs must mention vendored framework integrity handling")
     if "placeholder bundle guard" not in changes:
@@ -262,6 +273,9 @@ def main() -> int:
     resource_plan = resource_plan_path.read_text(encoding="utf-8") if resource_plan_path.exists() else ""
     if "status: completed" not in resource_plan:
         failures.append("release bundle resource guard plan must be marked completed")
+    size_plan = read("docs/plans/2026-06-12-release-bundle-size-guard.md")
+    if "status: completed" not in size_plan or "hostile mutations" not in size_plan:
+        failures.append("release bundle size guard plan must record completed verification")
     integrity_plan = read("docs/plans/2026-06-10-vendored-framework-integrity.md")
     if "status: completed" not in integrity_plan or "VENDORED_FRAMEWORKS.sha256" not in integrity_plan:
         failures.append("vendored framework integrity plan must be completed and name the manifest")

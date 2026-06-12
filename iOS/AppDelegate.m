@@ -12,6 +12,7 @@
 #import "RCTRootView.h"
 
 static NSString * const NativeReactModuleName = @"WowNativeReact";
+static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 1024ULL;
 
 @implementation AppDelegate
 
@@ -43,6 +44,16 @@ static NSString * const NativeReactModuleName = @"WowNativeReact";
   }
 
   NSError *error = nil;
+  NSDictionary *bundleAttributes = [[NSFileManager defaultManager]
+                                    attributesOfItemAtPath:[bundleURL path]
+                                    error:&error];
+  NSNumber *bundleSize = [bundleAttributes objectForKey:NSFileSize];
+  if (bundleAttributes == nil || bundleSize == nil ||
+      [bundleSize unsignedLongLongValue] > MaximumReleaseBundleBytes) {
+    return YES;
+  }
+
+  error = nil;
   NSString *bundleContents = [NSString stringWithContentsOfURL:bundleURL
                                                       encoding:NSUTF8StringEncoding
                                                          error:&error];

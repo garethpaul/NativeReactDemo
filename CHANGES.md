@@ -2,6 +2,8 @@
 
 ## 2026-06-10
 
+- Added a release bundle size guard that rejects missing file metadata or more
+  than 10 MiB before reading local JavaScript contents.
 - Added vendored framework integrity verification for Fabric, Crashlytics, and
   their executable build tools using a strict SHA-256 manifest.
 - Added pinned, read-only macOS hosted validation for the static release-bundle

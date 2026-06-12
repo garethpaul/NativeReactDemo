@@ -91,6 +91,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   React Native module name is blank or whitespace-only.
 - The release bundle resource guard keeps `iOS/main.jsbundle` wired into the
   app target resources that release startup loads.
+- The release bundle size guard rejects local bundles larger than 10 MiB or
+  missing file-size metadata before reading JavaScript contents.
 
 ## Security and Privacy Notes
 
@@ -106,6 +108,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   not satisfy release bundle checks.
 - Keep the release bundle resource guard in place so release builds still ship
   the local `main.jsbundle` file.
+- Keep the release bundle size guard in place so corrupted or accidentally huge
+  resources cannot be read into memory before validation.
 - Vendored framework integrity checks verify the recorded SHA-256 hashes for
   Fabric, Crashlytics, and their executable build tools before project parsing.
 - Review changes touching mobile permissions or privacy-sensitive device data; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h.
