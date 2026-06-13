@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-13
+
+- Made every SDK-free Make alias resolve the static checker from the checkout
+  when the Makefile is invoked by absolute path.
+
 ## 2026-06-12
 
 - Disabled persisted checkout credentials and enforced the sole pinned

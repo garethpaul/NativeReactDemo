@@ -13,6 +13,17 @@ import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[1]
+EXPECTED_MAKEFILE = """ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+
+.PHONY: build check lint static-check test verify
+
+check: static-check
+
+lint test build verify: static-check
+
+static-check:
+\tpython3 "$(ROOT)/scripts/check-baseline.py"
+"""
 REQUIRED = [
     ".gitignore",
     ".github/workflows/check.yml",
@@ -48,6 +59,7 @@ REQUIRED = [
     "docs/plans/2026-06-10-vendored-framework-integrity.md",
     "docs/plans/2026-06-12-release-bundle-size-guard.md",
     "docs/plans/2026-06-12-checkout-credential-boundary.md",
+    "docs/plans/2026-06-13-location-independent-make.md",
 ]
 
 VENDORED_EXECUTABLES = {
@@ -71,13 +83,8 @@ def main() -> int:
 
     package = json.loads(read("package.json"))
     makefile = read("Makefile")
-    for target in [
-        ".PHONY: build check lint static-check test verify",
-        "check: static-check",
-        "lint test build verify: static-check",
-    ]:
-        if target not in makefile:
-            failures.append(f"Makefile must expose target contract: {target}")
+    if makefile != EXPECTED_MAKEFILE:
+        failures.append("Makefile must exactly preserve rooted SDK-free aliases")
 
     if package.get("dependencies", {}).get("react-native") != "0.4.2":
         failures.append("react-native dependency must stay pinned to 0.4.2")
@@ -193,8 +200,25 @@ def main() -> int:
         except Exception as error:
             failures.append(f"{xml_path} must parse as XML: {error}")
 
-    docs = read("README.md") + "\n" + read("VISION.md") + "\n" + read("SECURITY.md")
+    readme = read("README.md")
+    docs = readme + "\n" + read("VISION.md") + "\n" + read("SECURITY.md")
     changes = read("CHANGES.md")
+    location_independent_make_plan = read(
+        "docs/plans/2026-06-13-location-independent-make.md"
+    )
+    if "make -f /path/to/NativeReactDemo/Makefile check" not in readme:
+        failures.append("README must document location-independent Makefile invocation")
+    if not all(
+        evidence in location_independent_make_plan.lower()
+        for evidence in [
+            "status: completed",
+            "root and external-directory",
+            "five isolated hostile mutations",
+        ]
+    ):
+        failures.append(
+            "location-independent Make plan must record completed root, external, and mutation verification"
+        )
     for phrase in ["make lint", "make test", "make build", "make check", "Fabric/Crashlytics", "main.jsbundle"]:
         if phrase not in docs:
             failures.append(f"docs must mention {phrase}")

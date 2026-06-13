@@ -63,6 +63,9 @@ Detected npm scripts:
 
 - `make lint`, `make test`, `make build`, and `make check` run the SDK-free
   static baseline.
+- The Make gates are location-independent. From another directory, pass the
+  checkout's Makefile by absolute path, such as
+  `make -f /path/to/NativeReactDemo/Makefile check`.
 - Pinned `macos-15` GitHub Actions runs that baseline and parses
   `WowNativeReact.xcodeproj` without npm install, service credentials, vendored
   script execution, build, signing, simulator launch, or application execution.
@@ -122,6 +125,7 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
 - Run `make lint`, `make test`, `make build`, and `make check` before pushing
   JavaScript, plist, Xcode project, dependency, or security documentation
   changes.
+- Use an absolute Makefile path when running those gates outside the checkout.
 - See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias
   baseline.
 - See `docs/plans/2026-06-09-bundle-module-name-guard.md` for the bundle module
