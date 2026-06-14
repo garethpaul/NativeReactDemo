@@ -97,6 +97,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   app target resources that release startup loads.
 - The release bundle size guard rejects local bundles larger than 10 MiB or
   missing file-size metadata before reading JavaScript contents.
+- The release bundle regular-file guard rejects symbolic links, directories,
+  and unknown file types before size or content access.
 
 ## Security and Privacy Notes
 
@@ -114,6 +116,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   the local `main.jsbundle` file.
 - Keep the release bundle size guard in place so corrupted or accidentally huge
   resources cannot be read into memory before validation.
+- Keep the release bundle regular-file guard in place so link metadata cannot
+  bypass the pre-read size boundary.
 - Vendored framework integrity checks verify the recorded SHA-256 hashes for
   Fabric, Crashlytics, and their executable build tools before project parsing.
 - Review changes touching mobile permissions or privacy-sensitive device data; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h.

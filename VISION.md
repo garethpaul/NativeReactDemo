@@ -35,6 +35,7 @@ Priority:
 - Keep the bundle module name guard before release bundle registration checks
 - Keep the release bundle resource guard around Xcode resource wiring
 - Keep the release bundle size guard before reading release JavaScript
+- Keep the release bundle regular-file guard before size and content access
 - Keep vendored framework integrity hashes for Fabric/Crashlytics executables
 - Keep lint, test, build, and check gates on the SDK-free static baseline
 - Keep hosted macOS project parsing pinned, read-only, and free of npm install

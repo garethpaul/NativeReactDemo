@@ -47,8 +47,10 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
   NSDictionary *bundleAttributes = [[NSFileManager defaultManager]
                                     attributesOfItemAtPath:[bundleURL path]
                                     error:&error];
+  NSString *bundleType = [bundleAttributes objectForKey:NSFileType];
   NSNumber *bundleSize = [bundleAttributes objectForKey:NSFileSize];
-  if (bundleAttributes == nil || bundleSize == nil ||
+  if (bundleAttributes == nil || bundleType == nil || bundleSize == nil ||
+      ![bundleType isEqualToString:NSFileTypeRegular] ||
       [bundleSize unsignedLongLongValue] > MaximumReleaseBundleBytes) {
     return YES;
   }

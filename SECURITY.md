@@ -56,6 +56,8 @@ Helpful reports include:
   target resources so release startup does not depend on a missing bundle.
 - The release bundle size guard should reject missing file metadata and local
   JavaScript bundles larger than 10 MiB before reading their contents.
+- The release bundle regular-file guard should reject symbolic links and other
+  non-regular resources before trusting size metadata or reading contents.
 
 ## Mobile Privacy Notes
 

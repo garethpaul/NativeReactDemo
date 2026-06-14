@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-14
+
+- Added a release bundle regular-file guard so symbolic links and other
+  non-regular resources fail before size or content access.
+
 ## 2026-06-13
 
 - Made every SDK-free Make alias resolve the static checker from the checkout
