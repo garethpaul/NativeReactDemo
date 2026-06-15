@@ -61,6 +61,7 @@ REQUIRED = [
     "docs/plans/2026-06-12-checkout-credential-boundary.md",
     "docs/plans/2026-06-13-location-independent-make.md",
     "docs/plans/2026-06-14-release-bundle-regular-file-guard.md",
+    "docs/plans/2026-06-15-release-placeholder-shape-guard.md",
 ]
 
 VENDORED_EXECUTABLES = {
@@ -123,6 +124,16 @@ def main() -> int:
         failures.append("AppDelegate must fail closed when the JavaScript bundle URL is unavailable")
     if "isPlaceholderBundleAtURL:" not in app_delegate or "Offline JS file is empty" not in app_delegate:
         failures.append("AppDelegate must fail closed when release resolves the placeholder JavaScript bundle")
+    if (
+        'static NSString * const ReleasePlaceholderHeader = @"// Offline JS";' not in app_delegate
+        or "static NSString * const ReleasePlaceholderThrow" not in app_delegate
+        or "bundleContentsMatchReleasePlaceholder:" not in app_delegate
+        or "[trimmedBundleContents hasPrefix:ReleasePlaceholderHeader]" not in app_delegate
+        or "[trimmedBundleContents hasSuffix:ReleasePlaceholderThrow]" not in app_delegate
+        or "return [self bundleContentsMatchReleasePlaceholder:bundleContents];" not in app_delegate
+        or 'rangeOfString:@"Offline JS file is empty"' in app_delegate
+    ):
+        failures.append("AppDelegate must recognize the release placeholder by both content boundaries")
     if "#ifndef DEBUG" not in app_delegate:
         failures.append("placeholder JavaScript bundle guard must stay outside DEBUG builds")
     if "bundleURL == nil" not in app_delegate:
@@ -180,6 +191,23 @@ def main() -> int:
         failures.append("Xcode UI test must look for the text rendered by index.ios.js")
     if "textForView:" not in tests or "@selector(text)" not in tests:
         failures.append("Xcode UI test must handle both attributedText and text views")
+    if (
+        "testRejectsCheckedInReleasePlaceholder" not in tests
+        or "temporaryBundleURLWithContents:" not in tests
+        or "writeToURL:bundleURL" not in tests
+        or "// $ react-native bundle --minify" not in tests
+        or "XCTAssertTrue([delegate bundleContentsMatchReleasePlaceholder:placeholder])" not in tests
+        or "XCTAssertTrue([delegate isPlaceholderBundleAtURL:bundleURL])" not in tests
+    ):
+        failures.append("Xcode tests must reject the checked-in release placeholder shape")
+    if (
+        "testAcceptsRegisteredBundleContainingPlaceholderMarker" not in tests
+        or "AppRegistry.registerComponent('WowNativeReact'" not in tests
+        or "var diagnostic = 'Offline JS file is empty'" not in tests
+        or "XCTAssertFalse([delegate bundleContentsMatchReleasePlaceholder:bundleContents])" not in tests
+        or "XCTAssertFalse([delegate isPlaceholderBundleAtURL:bundleURL])" not in tests
+    ):
+        failures.append("Xcode tests must accept registered bundles with an unrelated placeholder marker")
 
     info = plistlib.loads((ROOT / "iOS/Info.plist").read_bytes())
     if info.get("NSLocationWhenInUseUsageDescription") == "":
@@ -249,6 +277,8 @@ def main() -> int:
     for relative_path in ["README.md", "SECURITY.md", "VISION.md"]:
         if "release bundle regular-file guard" not in read(relative_path):
             failures.append(f"{relative_path} must mention release bundle regular-file guard handling")
+        if "release placeholder shape guard" not in read(relative_path):
+            failures.append(f"{relative_path} must mention release placeholder shape guard handling")
     if "vendored framework integrity" not in docs.lower():
         failures.append("docs must mention vendored framework integrity handling")
     if "placeholder bundle guard" not in changes:
@@ -267,12 +297,27 @@ def main() -> int:
         failures.append("CHANGES must mention release bundle resource guard handling")
     if "release bundle regular-file guard" not in changes:
         failures.append("CHANGES must mention release bundle regular-file guard handling")
+    if "release placeholder shape guard" not in changes:
+        failures.append("CHANGES must mention release placeholder shape guard handling")
     if "vendored framework integrity" not in changes.lower():
         failures.append("CHANGES must mention vendored framework integrity handling")
     if "make lint" not in changes or "make test" not in changes or "make build" not in changes or "make check" not in changes:
         failures.append("CHANGES must mention standard Make gate aliases")
     if "Offline JS file is empty" in read("iOS/main.jsbundle") and "placeholder" not in read("README.md"):
         failures.append("README must document the checked-in main.jsbundle placeholder")
+
+    placeholder_shape_plan = read("docs/plans/2026-06-15-release-placeholder-shape-guard.md")
+    if not all(
+        evidence in placeholder_shape_plan.lower()
+        for evidence in [
+            "status: completed",
+            "root and external-directory",
+            "seven isolated hostile mutations",
+        ]
+    ):
+        failures.append(
+            "release placeholder shape plan must record completed root, external, and mutation verification"
+        )
 
     release_plan = read("docs/plans/2026-06-08-release-bundle-guard.md")
     if "status: completed" not in release_plan:

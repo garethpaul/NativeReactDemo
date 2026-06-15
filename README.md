@@ -99,6 +99,9 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   missing file-size metadata before reading JavaScript contents.
 - The release bundle regular-file guard rejects symbolic links, directories,
   and unknown file types before size or content access.
+- The release placeholder shape guard matches both the checked-in leading
+  comment and terminal throw, so unrelated marker text in a valid bundle is
+  not rejected.
 
 ## Security and Privacy Notes
 

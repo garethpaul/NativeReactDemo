@@ -58,6 +58,9 @@ Helpful reports include:
   JavaScript bundles larger than 10 MiB before reading their contents.
 - The release bundle regular-file guard should reject symbolic links and other
   non-regular resources before trusting size metadata or reading contents.
+- The release placeholder shape guard should require both checked-in content
+  boundaries instead of rejecting valid bundles that merely mention the
+  placeholder error text.
 
 ## Mobile Privacy Notes
 

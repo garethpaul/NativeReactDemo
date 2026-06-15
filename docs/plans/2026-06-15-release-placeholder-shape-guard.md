@@ -1,6 +1,6 @@
 # Match the Release Placeholder by Shape
 
-status: planned
+status: completed
 
 ## Problem
 
@@ -77,3 +77,14 @@ completed evidence, and project guidance.
   placeholder text changes must update the constants and regression together.
 - The helper remains a startup preflight, not a general JavaScript parser.
 - The stacked base pull request must remain available and merge first.
+
+## Verification Results
+
+- Focused source and test contracts, Python checker compilation with external
+  bytecode output, and `git diff --check` passed.
+- Root and external-directory Make gates passed on Linux; `xcodebuild` was
+  unavailable locally, so the existing hosted macOS workflow remains the
+  authoritative Objective-C/Xcode validation.
+- Seven isolated hostile mutations were rejected: unrestricted substring
+  matching, removal of either content boundary, weakening either regression,
+  missing maintenance guidance, and a reopened plan.

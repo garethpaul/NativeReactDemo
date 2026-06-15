@@ -12,6 +12,9 @@
 #import "RCTRootView.h"
 
 static NSString * const NativeReactModuleName = @"WowNativeReact";
+static NSString * const ReleasePlaceholderHeader = @"// Offline JS";
+static NSString * const ReleasePlaceholderThrow =
+    @"throw new Error('Offline JS file is empty. See iOS/main.jsbundle for instructions');";
 static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 1024ULL;
 
 @implementation AppDelegate
@@ -32,6 +35,18 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
   NSString *doubleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\"%@\"", trimmedModuleName];
   return [bundleContents rangeOfString:singleQuotedRegistration].location != NSNotFound ||
       [bundleContents rangeOfString:doubleQuotedRegistration].location != NSNotFound;
+}
+
+- (BOOL)bundleContentsMatchReleasePlaceholder:(NSString *)bundleContents
+{
+  if (bundleContents == nil) {
+    return NO;
+  }
+
+  NSString *trimmedBundleContents = [bundleContents stringByTrimmingCharactersInSet:
+                                     [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+  return [trimmedBundleContents hasPrefix:ReleasePlaceholderHeader] &&
+      [trimmedBundleContents hasSuffix:ReleasePlaceholderThrow];
 }
 
 - (BOOL)isPlaceholderBundleAtURL:(NSURL *)bundleURL
@@ -73,7 +88,7 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
     return YES;
   }
 
-  return [bundleContents rangeOfString:@"Offline JS file is empty"].location != NSNotFound;
+  return [self bundleContentsMatchReleasePlaceholder:bundleContents];
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions

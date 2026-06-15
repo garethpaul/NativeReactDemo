@@ -2,6 +2,8 @@
 
 ## 2026-06-14
 
+- Added a release placeholder shape guard so valid registered bundles may
+  mention the placeholder error text without being rejected.
 - Added a release bundle regular-file guard so symbolic links and other
   non-regular resources fail before size or content access.
 
