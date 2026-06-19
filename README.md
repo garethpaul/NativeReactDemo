@@ -48,7 +48,11 @@ make build
 make check
 ```
 
-The setup commands above are derived from repository files. Legacy mobile, Python, or JavaScript samples may require older SDKs or package versions than a modern workstation uses by default.
+The setup commands above are derived from repository files. This archived sample pins
+React Native 0.4.2. A June 19, 2026 lock-only audit resolved 183 production packages
+and reported 26 known vulnerabilities (6 critical, 17 high, 2 moderate, 1 low).
+Do not expose its packager to untrusted networks or treat the dependency graph as
+production-safe. Modernization requires a dedicated React Native migration.
 
 ## Running or Using the Project
 
@@ -61,11 +65,16 @@ Detected npm scripts:
 
 ## Testing and Verification
 
-- `make lint`, `make test`, `make build`, and `make check` run the SDK-free
-  static baseline.
+- `make lint`, `make build`, and `make verify` run the SDK-free static baseline.
+- `make test` and `make check` run that baseline plus 13 bounded-file,
+  bundle-path, tool-resolution, and hostile workflow policy tests.
+- The Make gates are location-independent. From another directory, pass the
+  checkout's Makefile by absolute path, such as
+  `make -f /path/to/NativeReactDemo/Makefile check`.
 - Pinned `macos-15` GitHub Actions runs that baseline and parses
-  `WowNativeReact.xcodeproj` without npm install, credentials, vendored script
-  execution, build, signing, simulator launch, or application execution.
+  `WowNativeReact.xcodeproj` without npm install, service credentials, vendored
+  script execution, build, signing, simulator launch, or application execution.
+  Checkout credentials are not persisted after source retrieval.
 - `npm run check`
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 
@@ -91,6 +100,16 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   React Native module name is blank or whitespace-only.
 - The release bundle resource guard keeps `iOS/main.jsbundle` wired into the
   app target resources that release startup loads.
+- The release bundle size guard rejects local bundles larger than 10 MiB or
+  missing file-size metadata before reading JavaScript contents.
+- The release bundle regular-file guard rejects symbolic links, directories,
+  and unknown file types before size or content access.
+- The release placeholder shape guard compares the complete normalized
+  checked-in placeholder, so unrelated marker text or boundary collisions in a
+  valid bundle are not rejected.
+- Static validation opens required text and vendored artifacts without following
+  symbolic links, enforces read/hash limits, requires the canonical
+  `iOS/main.jsbundle` Xcode path, and resolves Xcode through `/usr/bin/xcrun`.
 
 ## Security and Privacy Notes
 
@@ -106,6 +125,10 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   not satisfy release bundle checks.
 - Keep the release bundle resource guard in place so release builds still ship
   the local `main.jsbundle` file.
+- Keep the release bundle size guard in place so corrupted or accidentally huge
+  resources cannot be read into memory before validation.
+- Keep the release bundle regular-file guard in place so link metadata cannot
+  bypass the pre-read size boundary.
 - Vendored framework integrity checks verify the recorded SHA-256 hashes for
   Fabric, Crashlytics, and their executable build tools before project parsing.
 - Review changes touching mobile permissions or privacy-sensitive device data; examples from the scan include Crashlytics.framework/Headers/Crashlytics.h.
@@ -117,6 +140,7 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
 - Run `make lint`, `make test`, `make build`, and `make check` before pushing
   JavaScript, plist, Xcode project, dependency, or security documentation
   changes.
+- Use an absolute Makefile path when running those gates outside the checkout.
 - See `docs/plans/2026-06-09-make-gate-aliases.md` for the local gate alias
   baseline.
 - See `docs/plans/2026-06-09-bundle-module-name-guard.md` for the bundle module

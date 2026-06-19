@@ -12,8 +12,9 @@ layout and iOS integration. Project context lives in [`README.md`](README.md).
 The goal is to keep the demo understandable while making legacy dependency and
 credential assumptions clear.
 
-Current baseline: `make lint`, `make test`, `make build`, and `make check` run
-`scripts/check-baseline.py` to verify React Native dependency pinning,
+Current baseline: `make lint`, `make build`, and `make verify` run
+`scripts/check-baseline.py`; `make test` and `make check` add focused hostile
+unit tests. The gates verify React Native dependency pinning,
 DEBUG-only localhost bundle loading, release `main.jsbundle` wiring, the
 release bundle guard, the blank bundle guard, plist/XML validity, local secret
 ignores, and Fabric/Crashlytics documentation.
@@ -34,15 +35,22 @@ Priority:
 - Keep the exact bundle registration guard tied to the launched module name
 - Keep the bundle module name guard before release bundle registration checks
 - Keep the release bundle resource guard around Xcode resource wiring
+- Keep the release bundle size guard before reading release JavaScript
+- Keep the release bundle regular-file guard before size and content access
+- Keep the release placeholder shape guard tied to the complete normalized fixture
 - Keep vendored framework integrity hashes for Fabric/Crashlytics executables
-- Keep lint, test, build, and check gates on the SDK-free static baseline
+- Keep no-follow bounded file reads and canonical Xcode bundle paths
+- Keep deterministic Xcode resolution through absolute `/usr/bin/xcrun`
+- Keep lint, build, and verify on the static baseline and test/check on the hostile suite
 - Keep hosted macOS project parsing pinned, read-only, and free of npm install
+- Keep hosted source retrieval credential-free after checkout
 - Maintain security policy for the sample
 
 Next priorities:
 
 - Add README setup and supported Node/Xcode notes
 - Modernize React Native only in a dedicated migration
+- Treat the 26 known production dependency vulnerabilities as a release blocker
 - Add a manual launch checklist for the iOS app on a matching Xcode simulator
 - Regenerate `main.jsbundle` in a dedicated change when JavaScript behavior changes
 

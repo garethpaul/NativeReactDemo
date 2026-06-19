@@ -10,6 +10,7 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
+#import "../iOS/AppDelegate.h"
 #import "RCTAssert.h"
 #import "RCTRedBox.h"
 #import "RCTRootView.h"
@@ -17,12 +18,82 @@
 #define TIMEOUT_SECONDS 240
 #define TEXT_TO_LOOK_FOR @"Hi"
 
+@interface AppDelegate (ReleaseBundleValidationTesting)
+
+- (BOOL)bundleContentsMatchReleasePlaceholder:(NSString *)bundleContents;
+- (BOOL)isPlaceholderBundleAtURL:(NSURL *)bundleURL;
+
+@end
+
 @interface WowNativeReactTests : XCTestCase
 
 @end
 
 @implementation WowNativeReactTests
 
+- (NSURL *)temporaryBundleURLWithContents:(NSString *)contents
+{
+  NSString *fileName = [NSString stringWithFormat:@"%@.jsbundle", [[NSUUID UUID] UUIDString]];
+  NSURL *bundleURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:fileName]];
+  NSError *error = nil;
+  BOOL wroteBundle = [contents writeToURL:bundleURL
+                               atomically:YES
+                                 encoding:NSUTF8StringEncoding
+                                    error:&error];
+  XCTAssertTrue(wroteBundle, @"Could not write temporary bundle: %@", error);
+  return bundleURL;
+}
+
+- (void)removeTemporaryBundleAtURL:(NSURL *)bundleURL
+{
+  NSError *error = nil;
+  BOOL removedBundle = [[NSFileManager defaultManager] removeItemAtURL:bundleURL error:&error];
+  XCTAssertTrue(removedBundle, @"Could not remove temporary bundle: %@", error);
+}
+
+- (void)testRejectsCheckedInReleasePlaceholder
+{
+  NSString *placeholder = @"// Offline JS\n"
+      @"// To re-generate the offline bundle, run this from the root of your project:\n\n"
+      @"// $ react-native bundle --minify\n"
+      @"//\n"
+      @"// See http://facebook.github.io/react-native/docs/runningondevice.html for more details.\n\n"
+      @"throw new Error('Offline JS file is empty. See iOS/main.jsbundle for instructions');\n";
+  NSURL *bundleURL = [self temporaryBundleURLWithContents:placeholder];
+  AppDelegate *delegate = [[AppDelegate alloc] init];
+
+  XCTAssertTrue([delegate bundleContentsMatchReleasePlaceholder:placeholder]);
+  XCTAssertTrue([delegate isPlaceholderBundleAtURL:bundleURL]);
+
+  [self removeTemporaryBundleAtURL:bundleURL];
+}
+
+- (void)testAcceptsRegisteredBundleContainingPlaceholderMarker
+{
+  NSString *bundleContents = @"AppRegistry.registerComponent('WowNativeReact', function() { return null; });\n"
+      @"var diagnostic = 'Offline JS file is empty';\n";
+  NSURL *bundleURL = [self temporaryBundleURLWithContents:bundleContents];
+  AppDelegate *delegate = [[AppDelegate alloc] init];
+
+  XCTAssertFalse([delegate bundleContentsMatchReleasePlaceholder:bundleContents]);
+  XCTAssertFalse([delegate isPlaceholderBundleAtURL:bundleURL]);
+
+  [self removeTemporaryBundleAtURL:bundleURL];
+}
+
+- (void)testAcceptsRegisteredBundleWithPlaceholderBoundariesAndAdditionalContent
+{
+  NSString *bundleContents = @"// Offline JS\n"
+      @"AppRegistry.registerComponent('WowNativeReact', function() { return null; });\n"
+      @"throw new Error('Offline JS file is empty. See iOS/main.jsbundle for instructions');\n";
+  NSURL *bundleURL = [self temporaryBundleURLWithContents:bundleContents];
+  AppDelegate *delegate = [[AppDelegate alloc] init];
+
+  XCTAssertFalse([delegate bundleContentsMatchReleasePlaceholder:bundleContents]);
+  XCTAssertFalse([delegate isPlaceholderBundleAtURL:bundleURL]);
+
+  [self removeTemporaryBundleAtURL:bundleURL];
+}
 
 - (BOOL)findSubviewInView:(UIView *)view matching:(BOOL(^)(UIView *view))test
 {

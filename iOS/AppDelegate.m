@@ -12,6 +12,16 @@
 #import "RCTRootView.h"
 
 static NSString * const NativeReactModuleName = @"WowNativeReact";
+static NSString * const ReleasePlaceholderContents =
+    @"// Offline JS\n"
+    @"// To re-generate the offline bundle, run this from the root of your project:\n"
+    @"//\n"
+    @"// $ react-native bundle --minify\n"
+    @"//\n"
+    @"// See http://facebook.github.io/react-native/docs/runningondevice.html for more details.\n"
+    @"\n"
+    @"throw new Error('Offline JS file is empty. See iOS/main.jsbundle for instructions');";
+static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 1024ULL;
 
 @implementation AppDelegate
 
@@ -33,6 +43,21 @@ static NSString * const NativeReactModuleName = @"WowNativeReact";
       [bundleContents rangeOfString:doubleQuotedRegistration].location != NSNotFound;
 }
 
+- (BOOL)bundleContentsMatchReleasePlaceholder:(NSString *)bundleContents
+{
+  if (bundleContents == nil) {
+    return NO;
+  }
+
+  NSString *trimmedBundleContents = [bundleContents stringByTrimmingCharactersInSet:
+                                     [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+  NSString *normalizedBundleContents = [trimmedBundleContents
+      stringByReplacingOccurrencesOfString:@"\r\n" withString:@"\n"];
+  normalizedBundleContents = [normalizedBundleContents
+      stringByReplacingOccurrencesOfString:@"\r" withString:@"\n"];
+  return [normalizedBundleContents isEqualToString:ReleasePlaceholderContents];
+}
+
 - (BOOL)isPlaceholderBundleAtURL:(NSURL *)bundleURL
 {
   if (bundleURL == nil) {
@@ -43,6 +68,18 @@ static NSString * const NativeReactModuleName = @"WowNativeReact";
   }
 
   NSError *error = nil;
+  NSDictionary *bundleAttributes = [[NSFileManager defaultManager]
+                                    attributesOfItemAtPath:[bundleURL path]
+                                    error:&error];
+  NSString *bundleType = [bundleAttributes objectForKey:NSFileType];
+  NSNumber *bundleSize = [bundleAttributes objectForKey:NSFileSize];
+  if (bundleAttributes == nil || bundleType == nil || bundleSize == nil ||
+      ![bundleType isEqualToString:NSFileTypeRegular] ||
+      [bundleSize unsignedLongLongValue] > MaximumReleaseBundleBytes) {
+    return YES;
+  }
+
+  error = nil;
   NSString *bundleContents = [NSString stringWithContentsOfURL:bundleURL
                                                       encoding:NSUTF8StringEncoding
                                                          error:&error];
@@ -60,7 +97,7 @@ static NSString * const NativeReactModuleName = @"WowNativeReact";
     return YES;
   }
 
-  return [bundleContents rangeOfString:@"Offline JS file is empty"].location != NSNotFound;
+  return [self bundleContentsMatchReleasePlaceholder:bundleContents];
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
