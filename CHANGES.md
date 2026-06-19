@@ -1,5 +1,18 @@
 # Changes
 
+## 2026-06-19
+
+- Replaced broad release placeholder boundary matching with exact normalized
+  fixture matching and added a boundary-collision regression test.
+- Added no-follow bounded reads and streamed hashes for required repository
+  files and vendored artifacts.
+- Rejected case variants, traversal, and duplicate Xcode release bundle paths.
+- Resolved Xcode through absolute `/usr/bin/xcrun` and added 13 unit/hostile
+  tests for file, project, tool, workflow permission, action pin, secret, and
+  checkout credential invariants.
+- Added repository-wide ownership guidance and recorded the unsupported React
+  Native 0.4.2 audit result: 26 production vulnerabilities, including 6 critical.
+
 ## 2026-06-14
 
 - Added a release placeholder shape guard so valid registered bundles may

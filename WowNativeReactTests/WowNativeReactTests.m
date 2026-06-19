@@ -81,6 +81,20 @@
   [self removeTemporaryBundleAtURL:bundleURL];
 }
 
+- (void)testAcceptsRegisteredBundleWithPlaceholderBoundariesAndAdditionalContent
+{
+  NSString *bundleContents = @"// Offline JS\n"
+      @"AppRegistry.registerComponent('WowNativeReact', function() { return null; });\n"
+      @"throw new Error('Offline JS file is empty. See iOS/main.jsbundle for instructions');\n";
+  NSURL *bundleURL = [self temporaryBundleURLWithContents:bundleContents];
+  AppDelegate *delegate = [[AppDelegate alloc] init];
+
+  XCTAssertFalse([delegate bundleContentsMatchReleasePlaceholder:bundleContents]);
+  XCTAssertFalse([delegate isPlaceholderBundleAtURL:bundleURL]);
+
+  [self removeTemporaryBundleAtURL:bundleURL];
+}
+
 - (BOOL)findSubviewInView:(UIView *)view matching:(BOOL(^)(UIView *view))test
 {
   if (test(view)) {

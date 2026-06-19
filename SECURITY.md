@@ -31,6 +31,10 @@ Helpful reports include:
 - Review found mobile permission or privacy-sensitive data handling; changes in those areas should receive security-focused review before merge.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - Dependency manifests detected: package.json. Dependency updates should preserve lockfiles when present and avoid introducing packages without a clear maintenance reason.
+- React Native 0.4.2 is unsupported. A June 19, 2026 lock-only npm audit found
+  26 production dependency vulnerabilities (6 critical, 17 high, 2 moderate,
+  1 low). Do not run the legacy packager on an untrusted network or ship this
+  dependency graph; migrate React Native in a dedicated compatibility project.
 - Run `make lint`, `make test`, `make build`, and `make check` after changing JavaScript, plist files, Xcode project metadata, Fabric/Crashlytics setup, or security docs.
 - The pinned macOS workflow runs only static checks and project parsing without
   npm install, service credentials, vendored script execution, build, signing,
@@ -58,9 +62,11 @@ Helpful reports include:
   JavaScript bundles larger than 10 MiB before reading their contents.
 - The release bundle regular-file guard should reject symbolic links and other
   non-regular resources before trusting size metadata or reading contents.
-- The release placeholder shape guard should require both checked-in content
-  boundaries instead of rejecting valid bundles that merely mention the
-  placeholder error text.
+- The release placeholder shape guard should compare the complete normalized
+  checked-in placeholder instead of broad marker or boundary matches.
+- The static checker should reject symbolic links and oversized files before
+  reads or hashes, require the canonical release bundle project path, and use
+  `/usr/bin/xcrun` rather than a PATH-shadowable Xcode executable.
 
 ## Mobile Privacy Notes
 

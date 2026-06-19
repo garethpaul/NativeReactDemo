@@ -48,7 +48,11 @@ make build
 make check
 ```
 
-The setup commands above are derived from repository files. Legacy mobile, Python, or JavaScript samples may require older SDKs or package versions than a modern workstation uses by default.
+The setup commands above are derived from repository files. This archived sample pins
+React Native 0.4.2. A June 19, 2026 lock-only audit resolved 183 production packages
+and reported 26 known vulnerabilities (6 critical, 17 high, 2 moderate, 1 low).
+Do not expose its packager to untrusted networks or treat the dependency graph as
+production-safe. Modernization requires a dedicated React Native migration.
 
 ## Running or Using the Project
 
@@ -61,8 +65,9 @@ Detected npm scripts:
 
 ## Testing and Verification
 
-- `make lint`, `make test`, `make build`, and `make check` run the SDK-free
-  static baseline.
+- `make lint`, `make build`, and `make verify` run the SDK-free static baseline.
+- `make test` and `make check` run that baseline plus 13 bounded-file,
+  bundle-path, tool-resolution, and hostile workflow policy tests.
 - The Make gates are location-independent. From another directory, pass the
   checkout's Makefile by absolute path, such as
   `make -f /path/to/NativeReactDemo/Makefile check`.
@@ -99,9 +104,12 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
   missing file-size metadata before reading JavaScript contents.
 - The release bundle regular-file guard rejects symbolic links, directories,
   and unknown file types before size or content access.
-- The release placeholder shape guard matches both the checked-in leading
-  comment and terminal throw, so unrelated marker text in a valid bundle is
-  not rejected.
+- The release placeholder shape guard compares the complete normalized
+  checked-in placeholder, so unrelated marker text or boundary collisions in a
+  valid bundle are not rejected.
+- Static validation opens required text and vendored artifacts without following
+  symbolic links, enforces read/hash limits, requires the canonical
+  `iOS/main.jsbundle` Xcode path, and resolves Xcode through `/usr/bin/xcrun`.
 
 ## Security and Privacy Notes
 
