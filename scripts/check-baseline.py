@@ -19,7 +19,7 @@ MAXIMUM_TEXT_BYTES = 1024 * 1024
 MAXIMUM_PROJECT_BYTES = 2 * 1024 * 1024
 MAXIMUM_RELEASE_BUNDLE_BYTES = 10 * 1024 * 1024
 MAXIMUM_VENDORED_ARTIFACT_BYTES = 8 * 1024 * 1024
-EXPECTED_MAKEFILE = """ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+EXPECTED_MAKEFILE = """override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 .PHONY: build check lint static-check test verify
 
