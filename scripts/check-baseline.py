@@ -19,7 +19,10 @@ MAXIMUM_TEXT_BYTES = 1024 * 1024
 MAXIMUM_PROJECT_BYTES = 2 * 1024 * 1024
 MAXIMUM_RELEASE_BUNDLE_BYTES = 10 * 1024 * 1024
 MAXIMUM_VENDORED_ARTIFACT_BYTES = 8 * 1024 * 1024
-EXPECTED_MAKEFILE = """override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+EXPECTED_MAKEFILE = """ifneq ($(origin MAKEFILE_LIST),file)
+$(error MAKEFILE_LIST must not be overridden)
+endif
+override ROOT := $(shell path='$(subst ','"'"',$(MAKEFILE_LIST))'; path=$$(printf '%s\\n' "$$path" | sed 's/^ //'); dirname -- "$$path")
 
 .PHONY: build check lint static-check test verify
 
@@ -76,6 +79,7 @@ REQUIRED = [
     "docs/plans/2026-06-14-release-bundle-regular-file-guard.md",
     "docs/plans/2026-06-15-release-placeholder-shape-guard.md",
     "docs/plans/2026-06-19-native-react-deep-review.md",
+    "docs/plans/2026-06-21-spaced-makefile-path.md",
 ]
 
 VENDORED_EXECUTABLES = {
@@ -399,6 +403,7 @@ def main() -> int:
     location_independent_make_plan = read(
         "docs/plans/2026-06-13-location-independent-make.md"
     )
+    spaced_makefile_plan = read("docs/plans/2026-06-21-spaced-makefile-path.md")
     if "make -f /path/to/NativeReactDemo/Makefile check" not in readme:
         failures.append("README must document location-independent Makefile invocation")
     if not all(
@@ -412,6 +417,13 @@ def main() -> int:
         failures.append(
             "location-independent Make plan must record completed root, external, and mutation verification"
         )
+    if not all(value in spaced_makefile_plan for value in [
+        "status: completed",
+        "spaces, brackets, and an apostrophe",
+        "MAKEFILE_LIST",
+        "all six Make aliases",
+    ]):
+        failures.append("spaced Makefile path plan must preserve hostile-path and override verification")
     for phrase in ["make lint", "make test", "make build", "make check", "Fabric/Crashlytics", "main.jsbundle"]:
         if phrase not in docs:
             failures.append(f"docs must mention {phrase}")
