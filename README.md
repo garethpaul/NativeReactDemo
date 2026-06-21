@@ -66,14 +66,22 @@ Detected npm scripts:
 ## Testing and Verification
 
 - `make lint`, `make build`, and `make verify` run the SDK-free static baseline.
-- `make test` and `make check` run that baseline plus 16 bounded-file,
-  bundle-path, tool-resolution, and hostile workflow policy tests.
+- `make test` and `make check` run that baseline plus 14 bounded-file,
+  bundle-path, tool-resolution, hostile workflow policy, and Make-authority
+  tests. The authority harness exercises 42 target/override combinations.
 - The Make gates are location-independent. From another directory, pass the
   checkout's Makefile by absolute path, such as
   `make -f /path/to/NativeReactDemo/Makefile check`.
 - Absolute Makefile paths containing spaces, brackets, or apostrophes retain
   the complete checkout root. `ROOT` overrides are ignored, and attempts to
   override GNU Make's `MAKEFILE_LIST` metadata fail closed.
+- Repository verification rejects caller `MAKEFLAGS`, unsafe no-op/error-ignore
+  modes, `MAKEFILES`, extra `-f` programs, and authority added through
+  `--eval`. Caller startup programs may execute while GNU Make parses them,
+  before this Makefile can reject the unsupported invocation.
+- Python verification uses the fixed system interpreter with isolated startup;
+  caller `PATH`, `PYTHONPATH`, `ROOT`, `SHELL`, and `PYTHON` values do not select
+  verification code or tools.
 - Pinned `macos-15` GitHub Actions runs that baseline and parses
   `WowNativeReact.xcodeproj` without npm install, service credentials, vendored
   script execution, build, signing, simulator launch, or application execution.

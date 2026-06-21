@@ -2,6 +2,8 @@
 
 ## 2026-06-21
 
+- Bound Make verification authority, rejected non-executing modes and
+  additional Make programs, and isolated Python verification startup.
 - Preserved the complete checkout root for absolute Makefile paths containing
   spaces, brackets, or apostrophes, and rejected `MAKEFILE_LIST` overrides.
 - Expanded the SDK-free suite from 13 to 16 tests with hostile-path and root
