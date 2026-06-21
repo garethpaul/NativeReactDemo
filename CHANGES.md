@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-21
+
+- Made absolute Makefile verification portable across checkout paths containing
+  spaces or apostrophes and rejected caller overrides of `MAKEFILE_LIST`.
+- Made the Xcode tool-resolution unit test deterministic on non-macOS hosts.
+
 ## 2026-06-19
 
 - Replaced broad release placeholder boundary matching with exact normalized
