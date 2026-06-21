@@ -160,8 +160,9 @@ jobs:
 
 
 class ToolResolutionTests(unittest.TestCase):
+    @mock.patch.object(check_baseline.Path, "is_file", return_value=True)
     @mock.patch.object(check_baseline.subprocess, "run")
-    def test_xcodebuild_resolution_uses_absolute_xcrun(self, run):
+    def test_xcodebuild_resolution_uses_absolute_xcrun(self, run, _is_file):
         run.return_value = mock.Mock(
             returncode=0,
             stdout="/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild\n",
