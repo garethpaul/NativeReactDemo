@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-21
+
+- Preserved the complete checkout root for absolute Makefile paths containing
+  spaces, brackets, or apostrophes, and rejected `MAKEFILE_LIST` overrides.
+- Expanded the SDK-free suite from 13 to 16 tests with hostile-path and root
+  override regression coverage.
+
 ## 2026-06-19
 
 - Replaced broad release placeholder boundary matching with exact normalized
