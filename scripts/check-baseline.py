@@ -19,23 +19,7 @@ MAXIMUM_TEXT_BYTES = 1024 * 1024
 MAXIMUM_PROJECT_BYTES = 2 * 1024 * 1024
 MAXIMUM_RELEASE_BUNDLE_BYTES = 10 * 1024 * 1024
 MAXIMUM_VENDORED_ARTIFACT_BYTES = 8 * 1024 * 1024
-EXPECTED_MAKEFILE = """ifneq ($(origin MAKEFILE_LIST),file)
-$(error MAKEFILE_LIST must not be overridden)
-endif
-override ROOT := $(shell path='$(subst ','"'"',$(MAKEFILE_LIST))'; path=$$(printf '%s\\n' "$$path" | sed 's/^ //'); dirname -- "$$path")
-
-.PHONY: build check lint static-check test verify
-
-check: test
-
-lint build verify: static-check
-
-test: static-check
-\tpython3 -m unittest discover -s "$(ROOT)/tests" -p 'test_*.py'
-
-static-check:
-\tpython3 "$(ROOT)/scripts/check-baseline.py"
-"""
+EXPECTED_MAKEFILE_SHA256 = "b35648f88bc79d1aeb12bd0df09ae93c2d5c4382fcf41f266a550d367f92783f"
 REQUIRED = [
     ".gitignore",
     ".github/CODEOWNERS",
@@ -47,6 +31,8 @@ REQUIRED = [
     "VISION.md",
     "VENDORED_FRAMEWORKS.sha256",
     "package.json",
+    "scripts/run-python.sh",
+    "scripts/test-makefile-root.sh",
     "index.ios.js",
     "iOS/AppDelegate.m",
     "iOS/Info.plist",
@@ -242,12 +228,12 @@ def main() -> int:
 
     package = json.loads(read("package.json"))
     makefile = read("Makefile")
-    if makefile != EXPECTED_MAKEFILE:
-        failures.append("Makefile must exactly preserve rooted SDK-free aliases")
+    if hashlib.sha256(makefile.encode("utf-8")).hexdigest() != EXPECTED_MAKEFILE_SHA256:
+        failures.append("Makefile must exactly preserve bounded verification authority")
 
     if package.get("dependencies", {}).get("react-native") != "0.4.2":
         failures.append("react-native dependency must stay pinned to 0.4.2")
-    if package.get("scripts", {}).get("check") != "python3 scripts/check-baseline.py":
+    if package.get("scripts", {}).get("check") != "/usr/bin/python3 -I -B scripts/check-baseline.py":
         failures.append("package.json must expose npm run check")
 
     manifest_entries = {}
