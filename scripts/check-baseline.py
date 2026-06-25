@@ -66,6 +66,7 @@ REQUIRED = [
     "docs/plans/2026-06-15-release-placeholder-shape-guard.md",
     "docs/plans/2026-06-19-native-react-deep-review.md",
     "docs/plans/2026-06-21-spaced-makefile-path.md",
+    "docs/plans/2026-06-25-exact-module-token-boundary.md",
 ]
 
 VENDORED_EXECUTABLES = {
@@ -312,8 +313,8 @@ def main() -> int:
     if (
         'static NSString * const NativeReactModuleName = @"WowNativeReact";' not in app_delegate
         or "- (BOOL)bundleContents:(NSString *)bundleContents registersModule:(NSString *)moduleName" not in app_delegate
-        or "AppRegistry.registerComponent('%@'" not in app_delegate
-        or 'AppRegistry.registerComponent(\\"%@\\"' not in app_delegate
+        or "AppRegistry.registerComponent('%@'," not in app_delegate
+        or 'AppRegistry.registerComponent(\\"%@\\",' not in app_delegate
         or "[self bundleContents:bundleContents registersModule:NativeReactModuleName]" not in app_delegate
         or "moduleName:NativeReactModuleName" not in app_delegate
     ):
@@ -321,8 +322,8 @@ def main() -> int:
     if (
         "NSString *trimmedModuleName = [moduleName stringByTrimmingCharactersInSet:" not in app_delegate
         or "trimmedModuleName.length == 0" not in app_delegate
-        or 'NSString *singleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\'%@\'", trimmedModuleName];' not in app_delegate
-        or 'NSString *doubleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\\"%@\\"", trimmedModuleName];' not in app_delegate
+        or 'NSString *singleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\'%@\',", trimmedModuleName];' not in app_delegate
+        or 'NSString *doubleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\\"%@\\",", trimmedModuleName];' not in app_delegate
     ):
         failures.append("AppDelegate must reject blank bundle module names before registration checks")
     failures.extend(project_bundle_reference_errors(project))
@@ -357,6 +358,12 @@ def main() -> int:
         or "XCTAssertFalse([delegate bundleContentsMatchReleasePlaceholder:bundleContents])" not in tests
     ):
         failures.append("Xcode tests must reject broad placeholder boundary matching")
+    if (
+        "testRejectsPrefixModuleRegistration" not in tests
+        or "AppRegistry.registerComponent('WowNativeReactPreview'," not in tests
+        or "XCTAssertFalse([delegate bundleContents:bundleContents registersModule:@\"WowNativeReact\"]);" not in tests
+    ):
+        failures.append("Xcode tests must reject prefix-only React Native module registrations")
 
     info = plistlib.loads(read_bytes_file(ROOT / "iOS/Info.plist", MAXIMUM_TEXT_BYTES))
     if info.get("NSLocationWhenInUseUsageDescription") == "":

@@ -52,6 +52,8 @@
 - The placeholder bundle guard also fails closed if release startup resolves the checked-in empty bundle.
 - The blank bundle guard treats missing, empty, or whitespace-only release bundle content as an unsafe placeholder.
 - The bundle module guard treats release bundles without the expected `WowNativeReact` registration as unsafe.
+- Exact module registration checks require the closing quote and following
+  argument comma, so names that only start with `WowNativeReact` remain unsafe.
 
 ## Agent workflow
 

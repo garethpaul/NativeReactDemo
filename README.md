@@ -106,7 +106,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
 - The release bundle file URL guard rejects non-local release bundle URLs before
   React Native startup.
 - The exact bundle registration guard requires the release bundle to register
-  the same `WowNativeReact` module used to create `RCTRootView`.
+  the same `WowNativeReact` module used to create `RCTRootView`, including the
+  closing quote and argument delimiter so longer prefix names cannot pass.
 - The bundle module name guard fails registration checks closed if the expected
   React Native module name is blank or whitespace-only.
 - The release bundle resource guard keeps `iOS/main.jsbundle` wired into the
@@ -131,7 +132,8 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
 - Keep the release bundle file URL guard in place so release startup only uses
   a local `main.jsbundle`.
 - Keep the exact bundle registration guard in place so malformed release
-  bundles cannot satisfy module checks with unrelated strings.
+  bundles cannot satisfy module checks with unrelated strings or longer names
+  that merely start with `WowNativeReact`.
 - Keep the bundle module name guard in place so blank expected module names do
   not satisfy release bundle checks.
 - Keep the release bundle resource guard in place so release builds still ship
