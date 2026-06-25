@@ -21,6 +21,7 @@
 @interface AppDelegate (ReleaseBundleValidationTesting)
 
 - (BOOL)bundleContentsMatchReleasePlaceholder:(NSString *)bundleContents;
+- (BOOL)bundleContents:(NSString *)bundleContents registersModule:(NSString *)moduleName;
 - (BOOL)isPlaceholderBundleAtURL:(NSURL *)bundleURL;
 
 @end
@@ -93,6 +94,14 @@
   XCTAssertFalse([delegate isPlaceholderBundleAtURL:bundleURL]);
 
   [self removeTemporaryBundleAtURL:bundleURL];
+}
+
+- (void)testRejectsPrefixModuleRegistration
+{
+  NSString *bundleContents = @"AppRegistry.registerComponent('WowNativeReactPreview', function() { return null; });\n";
+  AppDelegate *delegate = [[AppDelegate alloc] init];
+
+  XCTAssertFalse([delegate bundleContents:bundleContents registersModule:@"WowNativeReact"]);
 }
 
 - (BOOL)findSubviewInView:(UIView *)view matching:(BOOL(^)(UIView *view))test

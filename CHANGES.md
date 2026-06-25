@@ -1,5 +1,27 @@
 # Changes
 
+## 2026-06-25 08:59 PDT
+
+- **Priority:** P1 release startup correctness.
+- **Summary:** Tightened React Native module validation so a bundle registering
+  a longer prefix name cannot pass as `WowNativeReact`.
+- **Work:** Required the closing quote and first-argument comma for single- and
+  double-quoted registrations, added native prefix-regression coverage, and
+  strengthened the portable source contract.
+- **Threads:** No open issue or pull request covered this release guard gap.
+- **Files:** Updated `iOS/AppDelegate.m`, native tests, portable validation,
+  contributor/security guidance, and a completed maintenance plan.
+- **Validation:** The test-first portable contract failed against the prefix
+  match; a hostile source mutation, root and external-directory `make check`,
+  14 Python tests, and `git diff --check` then passed. Native XCTest and project
+  parsing were skipped because `xcodebuild` is unavailable.
+- **Findings:** The prior substring ended at the expected module name and could
+  accept `WowNativeReactPreview` or any other longer prefix name.
+- **Blockers:** Native XCTest requires compatible macOS/Xcode and the legacy
+  React Native source environment.
+- **Next action:** Review the exact PR head and merge only after hosted checks
+  pass.
+
 ## 2026-06-21
 
 - Bound Make verification authority, rejected non-executing modes and

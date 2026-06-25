@@ -37,8 +37,8 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
     return NO;
   }
 
-  NSString *singleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent('%@'", trimmedModuleName];
-  NSString *doubleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\"%@\"", trimmedModuleName];
+  NSString *singleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent('%@',", trimmedModuleName];
+  NSString *doubleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\"%@\",", trimmedModuleName];
   return [bundleContents rangeOfString:singleQuotedRegistration].location != NSNotFound ||
       [bundleContents rangeOfString:doubleQuotedRegistration].location != NSNotFound;
 }
