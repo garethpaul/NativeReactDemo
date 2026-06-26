@@ -45,14 +45,14 @@ Priority:
 - Keep lint, build, and verify on the static baseline and test/check on the hostile suite
 - Keep hosted macOS project parsing pinned, read-only, and free of npm install
 - Keep hosted source retrieval credential-free after checkout
+- Keep legacy Node/Xcode setup, debug-packager, release-bundle, and
+  manual-launch guidance synchronized with source
 - Maintain security policy for the sample
 
 Next priorities:
 
-- Add README setup and supported Node/Xcode notes
 - Modernize React Native only in a dedicated migration
 - Treat the 26 known production dependency vulnerabilities as a release blocker
-- Add a manual launch checklist for the iOS app on a matching Xcode simulator
 - Regenerate `main.jsbundle` in a dedicated change when JavaScript behavior changes
 
 Contribution rules:

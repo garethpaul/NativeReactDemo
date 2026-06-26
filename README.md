@@ -30,11 +30,16 @@ Additional scan context:
 
 ## Getting Started
 
-### Prerequisites
+### Legacy Compatibility Baseline
 
 - Git
-- macOS with Xcode for building Apple platform projects
-- Node.js and npm
+- macOS with Xcode capable of opening the legacy Objective-C project
+- Node.js and npm compatible with the historical React Native 0.4.2 packager
+
+The app target pins an iOS 7.0 deployment target; the test target pins an iOS
+8.2 deployment target. The shared scheme is `WowNativeReact`. These values
+describe checked-in project metadata, not a promise that current Xcode, Node,
+or iOS releases remain compatible. Treat modernization as a separate migration.
 
 ### Setup
 
@@ -54,6 +59,29 @@ and reported 26 known vulnerabilities (6 critical, 17 high, 2 moderate, 1 low).
 Do not expose its packager to untrusted networks or treat the dependency graph as
 production-safe. Modernization requires a dedicated React Native migration.
 
+### Debug Packager Launch
+
+Debug builds load `http://localhost:8081/index.ios.bundle`. After dependencies
+are installed, run `npm start`, open `WowNativeReact.xcodeproj`, select the
+shared `WowNativeReact` scheme and an available iOS simulator, then Run. Keep
+the historical packager bound to a trusted development machine.
+
+### Release Bundle Boundary
+
+Release builds load the app resource `main.jsbundle`, and the checked-in
+`iOS/main.jsbundle` is a deliberate placeholder that throws instead of
+registering `WowNativeReact`. Release launch therefore fails closed until a
+reviewed bundle is intentionally generated and passes the existing guards.
+
+### Manual Simulator Launch Checklist
+
+1. Confirm `/usr/bin/make check` passes before installing legacy dependencies.
+2. Use a disposable checkout/runtime because the audit has 26 vulnerabilities.
+3. Run `npm start` and wait for the localhost port 8081 packager.
+4. Run the shared `WowNativeReact` scheme on an available simulator.
+5. Confirm the app renders `Hello World` without bundle/module errors.
+6. Stop the app and packager; do not claim Release launch with the placeholder.
+
 ## Running or Using the Project
 
 - Open `WowNativeReact.xcodeproj` in Xcode, choose the app or sample scheme, and run it on the matching simulator/device.
@@ -64,6 +92,12 @@ Detected npm scripts:
 - `npm run start` - `node_modules/react-native/packager/packager.sh`
 
 ## Testing and Verification
+
+Run the canonical SDK-free gate:
+
+```sh
+/usr/bin/make check
+```
 
 - `make lint`, `make build`, and `make verify` run the SDK-free static baseline.
 - `make test` and `make check` run that baseline plus 14 bounded-file,
@@ -86,6 +120,13 @@ Detected npm scripts:
   `WowNativeReact.xcodeproj` without npm install, service credentials, vendored
   script execution, build, signing, simulator launch, or application execution.
   Checkout credentials are not persisted after source retrieval.
+
+### Hosted Verification Boundary
+
+Hosted validation parses the project and runs static contracts without
+installing React Native 0.4.2, executing vendored scripts, building, signing,
+launching a simulator, or starting the packager. Manual launch requires an
+isolated compatible macOS/Xcode/Node environment.
 - `npm run check`
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
 

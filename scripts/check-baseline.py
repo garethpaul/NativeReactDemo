@@ -393,6 +393,31 @@ def main() -> int:
     readme = read("README.md")
     docs = readme + "\n" + read("VISION.md") + "\n" + read("SECURITY.md")
     changes = read("CHANGES.md")
+    normalized_readme = " ".join(readme.split())
+    for phrase in [
+        "Legacy Compatibility Baseline",
+        "historical React Native 0.4.2 packager",
+        "iOS 7.0 deployment target",
+        "iOS 8.2 deployment target",
+        "WowNativeReact",
+        "Debug Packager Launch",
+        "http://localhost:8081/index.ios.bundle",
+        "Release Bundle Boundary",
+        "checked-in `iOS/main.jsbundle` is a deliberate placeholder",
+        "Manual Simulator Launch Checklist",
+        "Run the canonical SDK-free gate",
+        "Hosted Verification Boundary",
+    ]:
+        if phrase not in normalized_readme:
+            failures.append(f"README setup guide must preserve: {phrase}")
+    normalized_vision = " ".join(read("VISION.md").split())
+    if "Keep legacy Node/Xcode setup, debug-packager, release-bundle, and manual-launch guidance synchronized with source" not in normalized_vision:
+        failures.append("VISION must preserve the NativeReact setup-guide boundary")
+    if "Completed the NativeReactDemo setup and manual-launch priorities" not in changes:
+        failures.append("CHANGES must record the NativeReactDemo setup-guide reconciliation")
+    setup_plan = read("docs/plans/2026-06-26-native-react-setup-guide.md")
+    if "status: completed" not in setup_plan.lower() or "Document NativeReactDemo's legacy compatibility baseline" not in setup_plan:
+        failures.append("NativeReactDemo setup guide plan must record completed evidence")
     location_independent_make_plan = read(
         "docs/plans/2026-06-13-location-independent-make.md"
     )

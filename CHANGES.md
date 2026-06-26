@@ -1,5 +1,28 @@
 # Changes
 
+## 2026-06-26 03:58 PDT
+
+- **Priority:** P2 developer workflow clarity.
+- **Summary:** Completed the NativeReactDemo setup and manual-launch priorities
+  with source-backed legacy compatibility, debug packager, release placeholder,
+  simulator checklist, and hosted-verification guidance.
+- **Work:** Added fail-closed README, roadmap, history, and completed-plan
+  contracts without changing runtime, dependencies, project settings, or CI.
+- **Threads:** None; active work in other repositories was excluded.
+- **Files:** Updated `README.md`, `VISION.md`, `CHANGES.md`, the static checker,
+  and `docs/plans/2026-06-26-native-react-setup-guide.md`.
+- **Validation:** The initial checker failed on the absent guide. All 15 final
+  hostile mutations failed closed; two preliminary runs exposed duplicate
+  version/command mentions and one wrapped fixture, which strengthened the
+  unique contracts without changing runtime behavior. Root and external
+  `/usr/bin/make check` each passed 42 Make authority cases and 14 Python tests;
+  Xcode remained unavailable and the static baseline reported that honestly.
+- **Findings:** No current Node/Xcode combination is promised; the checked-in
+  iOS 7/8.2 and React Native 0.4.2 metadata is historical, and Release remains
+  intentionally non-runnable with the placeholder.
+- **Blockers:** A real launch requires an isolated compatible legacy runtime.
+- **Next action:** Prove all guide drift fails closed and require exact-head CI.
+
 ## 2026-06-25 08:59 PDT
 
 - **Priority:** P1 release startup correctness.
