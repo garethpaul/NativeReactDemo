@@ -1,6 +1,6 @@
 # Changes
 
-## 2026-06-27 - P1 - Lexically validate release module registration
+## 2026-06-26 18:24 PDT - P1 - Lexically validate release module registration
 
 - **Summary:** Release startup now recognizes `WowNativeReact` registration
   only as JavaScript code, not matching text inside comments, string literals,
@@ -22,6 +22,9 @@
   context was discarded.
 - Release module registration must be executable JavaScript code, not text inside comments, string literals, or regular-expression literals.
 - **Threads:** None; the active PR was reviewed and corrected directly.
+- **Files:** Updated `iOS/AppDelegate.m`, native XCTest fixtures, portable
+  scanner contracts and hostile mutations, this change record, and
+  `docs/plans/2026-06-27-lexical-module-registration.md`.
 - **Validation:** The focused portable scanner test failed red on absent regular-
   expression handling, then passed after the context-aware fix. JavaScript
   regex, control-condition, postfix-division, and ambiguous-division fixtures
@@ -30,18 +33,18 @@
   and current-tree gitleaks also passed. Local `xcodebuild` is unavailable;
   hosted macOS parses the Xcode project, but neither baseline compiles the
   Objective-C target or executes native XCTest.
-- **Hosted:** Both baseline runs and CodeQL Actions, JavaScript/TypeScript, and
-  Python analysis passed on the earlier correction head
-  `810e8668b35376bd52d86c50e9f490f93b7f81b8`; the restricted-statement amend
-  requires the same gates on its new exact head.
-- **Review:** Initial PR #14 merged at `a9dacf6` before this audit completed.
-  Post-merge manual review rejected its scanner for the regex-literal false
-  positive. `$codex-review` was invoked for the correction but OpenAI returned
-  HTTP 401 before analysis; the authentication-only exception applies.
+- **Hosted:** PR #15 final head `f67d415b821864124f4faf2e08b36d227c16f5ef`
+  and merge commit `0e64a581f00177445a7815aa1e128d546b9bafb5`
+  passed both baselines and CodeQL, but do not contain the restricted-statement
+  follow-up. The new exact head requires the same gates.
+- **Review:** PR #14 merged before the regex-literal audit; PR #15 fixed that
+  bypass but merged before the restricted-statement audit completed.
+  `$codex-review` returned HTTP 401 before analysis; the authentication-only
+  exception applies.
 - **Blockers:** The maintained baseline cannot execute the Objective-C scanner
   or native XCTest without a reproducible React Native 0.4.2 dependency graph.
-- **Next action:** Open a focused P1 correction PR, invoke exact-head review,
-  and merge only after the evidence-only replacement head is hosted-green.
+- **Next action:** Open the focused restricted-statement follow-up and merge
+  only after its exact head is hosted-green.
 
 
 ## 2026-06-26 03:58 PDT
