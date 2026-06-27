@@ -260,6 +260,18 @@ class ModuleRegistrationScannerTests(unittest.TestCase):
             [],
         )
 
+    def test_rejects_missing_unicode_line_terminators(self):
+        mutated = self.app_delegate.replace(
+            "character == 0x2028 || character == 0x2029",
+            "character == 0x2028",
+            1,
+        )
+        self.assertNotEqual(mutated, self.app_delegate)
+        self.assertNotEqual(
+            check_baseline.module_registration_scanner_errors(mutated, self.native_tests),
+            [],
+        )
+
     def test_rejects_consumed_ambiguous_division(self):
         mutated = self.app_delegate.replace(
             "*index = regularExpressionStart;",

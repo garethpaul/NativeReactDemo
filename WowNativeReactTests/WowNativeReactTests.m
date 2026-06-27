@@ -164,6 +164,8 @@
     @"outer: while (ready) { continue outer\n/AppRegistry.registerComponent('WowNativeReact',.*)/.test(source); }\n",
     @"outer: while (ready) { break outer /* label comment\n*/ /AppRegistry.registerComponent('WowNativeReact',.*)/.test(source); }\n",
     @"debugger\n/AppRegistry.registerComponent('WowNativeReact',.*)/.test(source);\n",
+    @"outer: while (ready) { continue outer\u2028/AppRegistry.registerComponent('WowNativeReact',.*)/.test(source); }\n",
+    @"outer: while (ready) { break outer\u2029/AppRegistry.registerComponent('WowNativeReact',.*)/.test(source); }\n",
   ];
   AppDelegate *delegate = [[AppDelegate alloc] init];
 

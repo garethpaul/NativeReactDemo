@@ -20,6 +20,9 @@
   after semicolon-less `break`, labeled `continue`, multiline label comments,
   or `debugger` could still be scanned as code because their line terminator
   context was discarded.
+- **Finding:** Review of the restricted-statement follow-up found that JavaScript
+  U+2028 and U+2029 line terminators were not recognized, preserving the same
+  false positive after labeled `break` or `continue`.
 - Release module registration must be executable JavaScript code, not text inside comments, string literals, or regular-expression literals.
 - **Threads:** None; the active PR was reviewed and corrected directly.
 - **Files:** Updated `iOS/AppDelegate.m`, native XCTest fixtures, portable
@@ -29,8 +32,9 @@
   expression handling, then passed after the context-aware fix. JavaScript
   regex, control-condition, postfix-division, and ambiguous-division fixtures
   parsed successfully. Root and external-directory `make check` each passed 42
-  Make authority cases and 25 Python tests; `npm run check`, `git diff --check`,
-  and current-tree gitleaks also passed. Local `xcodebuild` is unavailable;
+  Make authority cases and 26 Python tests. U+2028/U+2029 JavaScript fixtures,
+  `npm run check`, `git diff --check`, and current-tree gitleaks also passed.
+  Local `xcodebuild` is unavailable;
   hosted macOS parses the Xcode project, but neither baseline compiles the
   Objective-C target or executes native XCTest.
 - **Hosted:** PR #15 final head `f67d415b821864124f4faf2e08b36d227c16f5ef`
@@ -38,12 +42,13 @@
   passed both baselines and CodeQL, but do not contain the restricted-statement
   follow-up. The new exact head requires the same gates.
 - **Review:** PR #14 merged before the regex-literal audit; PR #15 fixed that
-  bypass but merged before the restricted-statement audit completed.
+  bypass but merged before the restricted-statement audit completed. PR #16
+  then merged before the U+2028/U+2029 line-terminator audit completed.
   `$codex-review` returned HTTP 401 before analysis; the authentication-only
   exception applies.
 - **Blockers:** The maintained baseline cannot execute the Objective-C scanner
   or native XCTest without a reproducible React Native 0.4.2 dependency graph.
-- **Next action:** Open the focused restricted-statement follow-up and merge
+- **Next action:** Open the focused Unicode line-terminator correction and merge
   only after its exact head is hosted-green.
 
 
