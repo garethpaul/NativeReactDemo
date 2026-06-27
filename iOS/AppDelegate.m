@@ -149,6 +149,19 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
   return NO;
 }
 
+- (BOOL)javaScriptContents:(NSString *)contents
+    containsLineTerminatorFromIndex:(NSUInteger)start
+                            toIndex:(NSUInteger)end
+{
+  for (NSUInteger index = start; index < end; index += 1) {
+    unichar character = [contents characterAtIndex:index];
+    if (character == '\n' || character == '\r') {
+      return YES;
+    }
+  }
+  return NO;
+}
+
 - (BOOL)identifierAtIndex:(NSUInteger *)index
                inContents:(NSString *)contents
                    matches:(NSString *)identifier
@@ -190,6 +203,8 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
   BOOL previousTokenWasDot = NO;
   BOOL canStartRegularExpression = YES;
   BOOL nextParenthesisStartsControlHeader = NO;
+  BOOL restrictedStatementCanEndAtLineTerminator = NO;
+  BOOL restrictedStatementMayConsumeLabel = NO;
   NSCharacterSet *javascriptWhitespace = [NSCharacterSet whitespaceAndNewlineCharacterSet];
   NSMutableArray *parenthesisContexts = [NSMutableArray array];
   NSSet *regularExpressionPrefixKeywords = [NSSet setWithObjects:
@@ -200,15 +215,31 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
   while (index < bundleContents.length) {
     unichar currentCharacter = [bundleContents characterAtIndex:index];
     if ([javascriptWhitespace characterIsMember:currentCharacter]) {
+      if ((currentCharacter == '\n' || currentCharacter == '\r') &&
+          restrictedStatementCanEndAtLineTerminator) {
+        canStartRegularExpression = YES;
+        restrictedStatementCanEndAtLineTerminator = NO;
+        restrictedStatementMayConsumeLabel = NO;
+      }
       index += 1;
       continue;
     }
+    NSUInteger skippedTokenStart = index;
     BOOL currentTokenIsString = currentCharacter == '\'' || currentCharacter == '"' || currentCharacter == '`';
     if ([self skipJavaScriptStringOrCommentInContents:bundleContents index:&index]) {
       if (currentTokenIsString) {
         previousTokenWasDot = NO;
         canStartRegularExpression = NO;
         nextParenthesisStartsControlHeader = NO;
+        restrictedStatementCanEndAtLineTerminator = NO;
+        restrictedStatementMayConsumeLabel = NO;
+      } else if (restrictedStatementCanEndAtLineTerminator &&
+                 [self javaScriptContents:bundleContents
+                     containsLineTerminatorFromIndex:skippedTokenStart
+                                             toIndex:index]) {
+        canStartRegularExpression = YES;
+        restrictedStatementCanEndAtLineTerminator = NO;
+        restrictedStatementMayConsumeLabel = NO;
       }
       continue;
     }
@@ -217,6 +248,8 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
       previousTokenWasDot = NO;
       canStartRegularExpression = NO;
       nextParenthesisStartsControlHeader = NO;
+      restrictedStatementCanEndAtLineTerminator = NO;
+      restrictedStatementMayConsumeLabel = NO;
       continue;
     }
 
@@ -225,10 +258,13 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
       previousTokenWasDot = NO;
       canStartRegularExpression = NO;
       nextParenthesisStartsControlHeader = NO;
+      restrictedStatementCanEndAtLineTerminator = NO;
+      restrictedStatementMayConsumeLabel = NO;
       index += 1;
       continue;
     }
-    if (![self identifierAtIndex:&candidate inContents:bundleContents matches:@"AppRegistry"]) {
+    if (restrictedStatementMayConsumeLabel ||
+        ![self identifierAtIndex:&candidate inContents:bundleContents matches:@"AppRegistry"]) {
       if ([self isJavaScriptIdentifierCharacter:currentCharacter]) {
         NSUInteger identifierStart = index;
         while (index < bundleContents.length &&
@@ -237,7 +273,21 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
         }
         NSString *identifier = [bundleContents substringWithRange:
                                 NSMakeRange(identifierStart, index - identifierStart)];
-        canStartRegularExpression = [regularExpressionPrefixKeywords containsObject:identifier];
+        if ([identifier isEqualToString:@"break"] || [identifier isEqualToString:@"continue"]) {
+          restrictedStatementCanEndAtLineTerminator = YES;
+          restrictedStatementMayConsumeLabel = YES;
+          canStartRegularExpression = YES;
+        } else if ([identifier isEqualToString:@"debugger"]) {
+          restrictedStatementCanEndAtLineTerminator = YES;
+          restrictedStatementMayConsumeLabel = NO;
+          canStartRegularExpression = YES;
+        } else if (restrictedStatementMayConsumeLabel) {
+          restrictedStatementMayConsumeLabel = NO;
+          canStartRegularExpression = NO;
+        } else {
+          restrictedStatementCanEndAtLineTerminator = NO;
+          canStartRegularExpression = [regularExpressionPrefixKeywords containsObject:identifier];
+        }
         nextParenthesisStartsControlHeader = [regularExpressionControlKeywords containsObject:identifier];
         previousTokenWasDot = NO;
         continue;
@@ -247,6 +297,8 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
         canStartRegularExpression = YES;
         previousTokenWasDot = NO;
         nextParenthesisStartsControlHeader = NO;
+        restrictedStatementCanEndAtLineTerminator = NO;
+        restrictedStatementMayConsumeLabel = NO;
         index += 1;
         continue;
       }
@@ -259,6 +311,8 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
         canStartRegularExpression = closesControlHeader;
         previousTokenWasDot = NO;
         nextParenthesisStartsControlHeader = NO;
+        restrictedStatementCanEndAtLineTerminator = NO;
+        restrictedStatementMayConsumeLabel = NO;
         index += 1;
         continue;
       }
@@ -268,6 +322,8 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
         canStartRegularExpression = NO;
         previousTokenWasDot = NO;
         nextParenthesisStartsControlHeader = NO;
+        restrictedStatementCanEndAtLineTerminator = NO;
+        restrictedStatementMayConsumeLabel = NO;
         index += 2;
         continue;
       }
@@ -275,11 +331,15 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
       canStartRegularExpression = currentCharacter != ')' && currentCharacter != ']' &&
           currentCharacter != '.';
       nextParenthesisStartsControlHeader = NO;
+      restrictedStatementCanEndAtLineTerminator = NO;
+      restrictedStatementMayConsumeLabel = NO;
       index += 1;
       continue;
     }
     previousTokenWasDot = NO;
     nextParenthesisStartsControlHeader = NO;
+    restrictedStatementCanEndAtLineTerminator = NO;
+    restrictedStatementMayConsumeLabel = NO;
     [self skipJavaScriptTriviaInContents:bundleContents index:&candidate];
     if (candidate >= bundleContents.length || [bundleContents characterAtIndex:candidate] != '.') {
       index += 1;

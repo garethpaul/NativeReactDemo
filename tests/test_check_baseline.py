@@ -224,6 +224,42 @@ class ModuleRegistrationScannerTests(unittest.TestCase):
             [],
         )
 
+    def test_rejects_missing_restricted_statement_context(self):
+        mutated = self.app_delegate.replace(
+            "BOOL restrictedStatementCanEndAtLineTerminator = NO;",
+            "BOOL restrictedStatementCanEndAtLineTerminator = YES;",
+            1,
+        )
+        self.assertNotEqual(mutated, self.app_delegate)
+        self.assertNotEqual(
+            check_baseline.module_registration_scanner_errors(mutated, self.native_tests),
+            [],
+        )
+
+    def test_rejects_missing_restricted_statement_native_regression(self):
+        mutated = self.native_tests.replace(
+            "testRejectsRegularExpressionAfterRestrictedStatement",
+            "testAllowsRegularExpressionAfterRestrictedStatement",
+            1,
+        )
+        self.assertNotEqual(mutated, self.native_tests)
+        self.assertNotEqual(
+            check_baseline.module_registration_scanner_errors(self.app_delegate, mutated),
+            [],
+        )
+
+    def test_rejects_missing_comment_line_terminator_detection(self):
+        mutated = self.app_delegate.replace(
+            "[self javaScriptContents:bundleContents",
+            "[self ignoredJavaScriptContents:bundleContents",
+            1,
+        )
+        self.assertNotEqual(mutated, self.app_delegate)
+        self.assertNotEqual(
+            check_baseline.module_registration_scanner_errors(mutated, self.native_tests),
+            [],
+        )
+
     def test_rejects_consumed_ambiguous_division(self):
         mutated = self.app_delegate.replace(
             "*index = regularExpressionStart;",

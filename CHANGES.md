@@ -10,28 +10,36 @@
   context-appropriate regular expressions while preserving division operators.
 - **Tests:** Added native cases for line comments, block comments, string
   literals, regular expressions, commented member access, division expressions,
-  and whitespace/comment-separated valid registration, plus five portable
-  scanner contracts and hostile mutations.
+  control headers, semicolon-less restricted statements and labels, and
+  whitespace/comment-separated valid registration, plus eight portable scanner
+  contracts and hostile mutations.
 - **Finding:** Review of the first lexical scanner found that a valid JavaScript
   regular-expression literal could still contain the exact accepted token shape
   and satisfy the release guard without registering a module.
+- **Finding:** Review of the replacement scanner found that regex statements
+  after semicolon-less `break`, labeled `continue`, multiline label comments,
+  or `debugger` could still be scanned as code because their line terminator
+  context was discarded.
 - Release module registration must be executable JavaScript code, not text inside comments, string literals, or regular-expression literals.
 - **Threads:** None; the active PR was reviewed and corrected directly.
 - **Validation:** The focused portable scanner test failed red on absent regular-
   expression handling, then passed after the context-aware fix. JavaScript
   regex, control-condition, postfix-division, and ambiguous-division fixtures
   parsed successfully. Root and external-directory `make check` each passed 42
-  Make authority cases and 22 Python tests; `npm run check`, `git diff --check`,
+  Make authority cases and 25 Python tests; `npm run check`, `git diff --check`,
   and current-tree gitleaks also passed. Local `xcodebuild` is unavailable;
-  hosted macOS parsed the Xcode project, but neither baseline compiles the
+  hosted macOS parses the Xcode project, but neither baseline compiles the
   Objective-C target or executes native XCTest.
 - **Hosted:** Both baseline runs and CodeQL Actions, JavaScript/TypeScript, and
-  Python analysis passed on correction head
-  `810e8668b35376bd52d86c50e9f490f93b7f81b8` before this evidence-only amend.
+  Python analysis passed on the earlier correction head
+  `810e8668b35376bd52d86c50e9f490f93b7f81b8`; the restricted-statement amend
+  requires the same gates on its new exact head.
 - **Review:** Initial PR #14 merged at `a9dacf6` before this audit completed.
   Post-merge manual review rejected its scanner for the regex-literal false
   positive. `$codex-review` was invoked for the correction but OpenAI returned
   HTTP 401 before analysis; the authentication-only exception applies.
+- **Blockers:** The maintained baseline cannot execute the Objective-C scanner
+  or native XCTest without a reproducible React Native 0.4.2 dependency graph.
 - **Next action:** Open a focused P1 correction PR, invoke exact-head review,
   and merge only after the evidence-only replacement head is hosted-green.
 
