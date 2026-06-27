@@ -149,6 +149,7 @@ release `main.jsbundle` wiring, the release bundle guard, the blank bundle guard
 - The exact bundle registration guard requires the release bundle to register
   the same `WowNativeReact` module used to create `RCTRootView`, including the
   closing quote and argument delimiter so longer prefix names cannot pass.
+- Release module registration must be executable JavaScript code, not text inside comments or string literals.
 - The bundle module name guard fails registration checks closed if the expected
   React Native module name is blank or whitespace-only.
 - The release bundle resource guard keeps `iOS/main.jsbundle` wired into the

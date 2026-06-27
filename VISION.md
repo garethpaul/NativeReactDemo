@@ -34,6 +34,7 @@ Priority:
 - Keep the release bundle file URL guard around release bundle loading
 - Keep the exact bundle registration guard tied to the launched module name
 - Require the complete quoted module argument so prefix names cannot pass
+- Release module registration must be executable JavaScript code, not text inside comments or string literals.
 - Keep the bundle module name guard before release bundle registration checks
 - Keep the release bundle resource guard around Xcode resource wiring
 - Keep the release bundle size guard before reading release JavaScript

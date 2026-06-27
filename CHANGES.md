@@ -1,5 +1,30 @@
 # Changes
 
+## 2026-06-27 - P1 - Lexically validate release module registration
+
+- **Summary:** Release startup now recognizes `WowNativeReact` registration
+  only as JavaScript code, not matching text inside comments or string literals.
+- **Work:** Replaced raw substring search with a bounded lexical scanner for
+  identifiers, punctuation, trivia, comments, and quoted/template strings.
+- **Tests:** Added native cases for line comments, block comments, string
+  literals, commented member access, and whitespace/comment-separated valid
+  registration, plus three portable hostile source mutations.
+- **Finding:** A comment or diagnostic string containing the exact old search
+  token could previously satisfy the release guard without registering a module.
+- Release module registration must be executable JavaScript code, not text inside comments or string literals.
+- **Validation:** Root and external-directory `make check`, `npm run check`, 42
+  Make authority cases, and 17 Python tests passed. Push run `28274078260` and
+  pull-request run `28274079163` passed hosted project parsing and static
+  contracts; CodeQL run `28274079136` passed Actions, JavaScript/TypeScript, and
+  Python analysis on the implementation head before this evidence-only amend.
+- **Review:** `codex review --base master` stopped before analysis with HTTP 401.
+  Immutable manual review confirmed bounded indexing, comment/string state,
+  member-object rejection, fail-closed malformed input, and the documented
+  limitation that this repository does not execute native XCTest in hosted CI.
+- **Next action:** Re-run exact-head static checks and merge only after the
+  evidence-only replacement head is green.
+
+
 ## 2026-06-26 03:58 PDT
 
 - **Priority:** P2 developer workflow clarity.
