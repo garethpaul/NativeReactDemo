@@ -25,7 +25,8 @@ Scan bounded UTF-8 bundle contents as JavaScript lexical states. Skip line and
 block comments; single-, double-, and template-quoted strings; and bounded
 regular-expression bodies when the preceding token permits an expression.
 Preserve ordinary division operators and restricted-statement line terminators,
-including optional `break` and `continue` labels. In code, require the global
+including U+2028/U+2029 and optional `break` and `continue` labels. In code,
+require the global
 `AppRegistry` identifier, dot member access,
 `registerComponent`, an opening parenthesis, the exact quoted module name, and
 the following comma. Allow whitespace and comments between code tokens.
@@ -39,7 +40,7 @@ object while accepting real calls after ordinary and ambiguous division.
 Portable tests reject restoration of raw substring matching and removal of the
 global-object, regular-expression, restricted-statement, or division-context
 boundaries. Canonical root and external-directory `make check` each passed 42
-Make authority cases and 25 Python tests. `npm run check`, JavaScript fixture
+Make authority cases and 26 Python tests. `npm run check`, JavaScript fixture
 parsing, `git diff --check`, and current-tree gitleaks passed. Hosted macOS
 parses the Xcode project, but the maintained baseline does not compile the
 Objective-C target or execute native XCTest; adding a synthetic-header compile

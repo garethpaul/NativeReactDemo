@@ -33,6 +33,12 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
       character == '_' || character == '$';
 }
 
+- (BOOL)isJavaScriptLineTerminator:(unichar)character
+{
+  return character == '\n' || character == '\r' ||
+      character == 0x2028 || character == 0x2029;
+}
+
 - (BOOL)skipJavaScriptStringOrCommentInContents:(NSString *)contents index:(NSUInteger *)index
 {
   NSUInteger length = contents.length;
@@ -66,7 +72,7 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
     while (*index < length) {
       unichar character = [contents characterAtIndex:*index];
       *index += 1;
-      if (character == '\n' || character == '\r') {
+      if ([self isJavaScriptLineTerminator:character]) {
         break;
       }
     }
@@ -121,7 +127,7 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
   while (*index < length) {
     unichar character = [contents characterAtIndex:*index];
     *index += 1;
-    if (character == '\n' || character == '\r') {
+    if ([self isJavaScriptLineTerminator:character]) {
       *index = regularExpressionStart;
       return NO;
     }
@@ -155,7 +161,7 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
 {
   for (NSUInteger index = start; index < end; index += 1) {
     unichar character = [contents characterAtIndex:index];
-    if (character == '\n' || character == '\r') {
+    if ([self isJavaScriptLineTerminator:character]) {
       return YES;
     }
   }
@@ -215,7 +221,7 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
   while (index < bundleContents.length) {
     unichar currentCharacter = [bundleContents characterAtIndex:index];
     if ([javascriptWhitespace characterIsMember:currentCharacter]) {
-      if ((currentCharacter == '\n' || currentCharacter == '\r') &&
+      if ([self isJavaScriptLineTerminator:currentCharacter] &&
           restrictedStatementCanEndAtLineTerminator) {
         canStartRegularExpression = YES;
         restrictedStatementCanEndAtLineTerminator = NO;
