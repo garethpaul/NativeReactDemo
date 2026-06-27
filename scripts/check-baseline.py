@@ -191,17 +191,32 @@ def module_registration_scanner_errors(app_delegate: str, tests: str) -> list[st
         "skipJavaScriptTriviaInContents:",
         "identifierAtIndex:",
         "skipJavaScriptStringOrCommentInContents:",
+        "skipJavaScriptRegularExpressionInContents:",
+        "[self skipJavaScriptRegularExpressionInContents:bundleContents index:&index]",
         "registration text inside comments and strings",
+        "registration text inside regular expressions",
         'matches:@"AppRegistry"',
         'matches:@"registerComponent"',
         "BOOL previousTokenWasDot = NO",
+        "BOOL canStartRegularExpression = YES",
+        "BOOL nextParenthesisStartsControlHeader = NO",
+        "NSMutableArray *parenthesisContexts",
         "if (previousTokenWasDot)",
         "previousTokenWasDot = currentCharacter == '.'",
+        "currentCharacter == '/' && canStartRegularExpression",
+        "regularExpressionPrefixKeywords",
+        "regularExpressionControlKeywords",
+        "BOOL insideCharacterClass = NO",
+        "NSUInteger regularExpressionStart = *index",
+        "*index = regularExpressionStart",
+        "(currentCharacter == '+' || currentCharacter == '-')",
         "character == '\\n' || character == '\\r'",
         "first == '\\'' || first == '\"' || first == '`'",
     ]
     if any(fragment not in app_delegate for fragment in required_source):
-        errors.append("AppDelegate must lexically validate module registration outside comments and strings")
+        errors.append("AppDelegate must lexically validate module registration outside comments, strings, and regular expressions")
+    if app_delegate.count("*index = regularExpressionStart;") != 2:
+        errors.append("AppDelegate must restore ambiguous slash probes at newline and end of input")
     if "rangeOfString:singleQuotedRegistration" in app_delegate or "rangeOfString:doubleQuotedRegistration" in app_delegate:
         errors.append("AppDelegate must not restore raw substring module registration checks")
 
@@ -213,6 +228,16 @@ def module_registration_scanner_errors(app_delegate: str, tests: str) -> list[st
         "bridge. /* trivia */ AppRegistry.registerComponent('WowNativeReact',",
         "testAcceptsLexicalRegistrationWithWhitespace",
         "AppRegistry /* bridge */ . registerComponent ( \\\"WowNativeReact\\\" ,",
+        "testRejectsRegistrationTextInsideRegularExpression",
+        "var diagnostic = /AppRegistry.registerComponent('WowNativeReact',.*)/",
+        "testAcceptsRegistrationAfterDivisionExpression",
+        "var ratio = total / count;",
+        "testRejectsRegularExpressionAfterControlCondition",
+        "if (ready) /AppRegistry.registerComponent('WowNativeReact',.*)/",
+        "testAcceptsRegistrationAfterPostfixDivisionExpression",
+        "var ratio = total++ / count;",
+        "testAcceptsRegistrationAfterAmbiguousDivisionExpression",
+        "var ratio = {} / count;",
         "XCTAssertTrue([delegate isPlaceholderBundleAtURL:bundleURL]);",
     ]
     if any(fragment not in tests for fragment in required_tests):
@@ -492,7 +517,7 @@ def main() -> int:
         failures.append("docs must mention release bundle file URL guard handling")
     if "exact bundle registration guard" not in docs:
         failures.append("docs must mention exact bundle registration guard handling")
-    lexical_guidance = "Release module registration must be executable JavaScript code, not text inside comments or string literals."
+    lexical_guidance = "Release module registration must be executable JavaScript code, not text inside comments, string literals, or regular-expression literals."
     for relative_path in ["AGENTS.md", "README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
         if lexical_guidance not in " ".join(read(relative_path).split()):
             failures.append(f"{relative_path} must preserve lexical module registration guidance")

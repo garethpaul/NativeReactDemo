@@ -176,6 +176,66 @@ class ModuleRegistrationScannerTests(unittest.TestCase):
             [],
         )
 
+    def test_rejects_missing_regular_expression_handling(self):
+        mutated = self.app_delegate.replace(
+            "[self skipJavaScriptRegularExpressionInContents:bundleContents index:&index]",
+            "NO",
+            1,
+        )
+        self.assertNotEqual(mutated, self.app_delegate)
+        self.assertNotEqual(
+            check_baseline.module_registration_scanner_errors(mutated, self.native_tests),
+            [],
+        )
+
+    def test_rejects_unconditional_slash_literal_handling(self):
+        mutated = self.app_delegate.replace(
+            "currentCharacter == '/' && canStartRegularExpression",
+            "currentCharacter == '/'",
+            1,
+        )
+        self.assertNotEqual(mutated, self.app_delegate)
+        self.assertNotEqual(
+            check_baseline.module_registration_scanner_errors(mutated, self.native_tests),
+            [],
+        )
+
+    def test_rejects_missing_control_parenthesis_context(self):
+        mutated = self.app_delegate.replace(
+            "BOOL nextParenthesisStartsControlHeader = NO;",
+            "BOOL nextParenthesisStartsControlHeader = YES;",
+            1,
+        )
+        self.assertNotEqual(mutated, self.app_delegate)
+        self.assertNotEqual(
+            check_baseline.module_registration_scanner_errors(mutated, self.native_tests),
+            [],
+        )
+
+    def test_rejects_missing_postfix_operator_context(self):
+        mutated = self.app_delegate.replace(
+            "(currentCharacter == '+' || currentCharacter == '-')",
+            "currentCharacter == '+'",
+            1,
+        )
+        self.assertNotEqual(mutated, self.app_delegate)
+        self.assertNotEqual(
+            check_baseline.module_registration_scanner_errors(mutated, self.native_tests),
+            [],
+        )
+
+    def test_rejects_consumed_ambiguous_division(self):
+        mutated = self.app_delegate.replace(
+            "*index = regularExpressionStart;",
+            "*index = length;",
+            1,
+        )
+        self.assertNotEqual(mutated, self.app_delegate)
+        self.assertNotEqual(
+            check_baseline.module_registration_scanner_errors(mutated, self.native_tests),
+            [],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

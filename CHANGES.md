@@ -3,26 +3,37 @@
 ## 2026-06-27 - P1 - Lexically validate release module registration
 
 - **Summary:** Release startup now recognizes `WowNativeReact` registration
-  only as JavaScript code, not matching text inside comments or string literals.
+  only as JavaScript code, not matching text inside comments, string literals,
+  or regular-expression literals.
 - **Work:** Replaced raw substring search with a bounded lexical scanner for
-  identifiers, punctuation, trivia, comments, and quoted/template strings.
+  identifiers, punctuation, trivia, comments, quoted/template strings, and
+  context-appropriate regular expressions while preserving division operators.
 - **Tests:** Added native cases for line comments, block comments, string
-  literals, commented member access, and whitespace/comment-separated valid
-  registration, plus three portable hostile source mutations.
-- **Finding:** A comment or diagnostic string containing the exact old search
-  token could previously satisfy the release guard without registering a module.
-- Release module registration must be executable JavaScript code, not text inside comments or string literals.
-- **Validation:** Root and external-directory `make check`, `npm run check`, 42
-  Make authority cases, and 17 Python tests passed. Push run `28274078260` and
-  pull-request run `28274079163` passed hosted project parsing and static
-  contracts; CodeQL run `28274079136` passed Actions, JavaScript/TypeScript, and
-  Python analysis on the implementation head before this evidence-only amend.
-- **Review:** `codex review --base master` stopped before analysis with HTTP 401.
-  Immutable manual review confirmed bounded indexing, comment/string state,
-  member-object rejection, fail-closed malformed input, and the documented
-  limitation that this repository does not execute native XCTest in hosted CI.
-- **Next action:** Re-run exact-head static checks and merge only after the
-  evidence-only replacement head is green.
+  literals, regular expressions, commented member access, division expressions,
+  and whitespace/comment-separated valid registration, plus five portable
+  scanner contracts and hostile mutations.
+- **Finding:** Review of the first lexical scanner found that a valid JavaScript
+  regular-expression literal could still contain the exact accepted token shape
+  and satisfy the release guard without registering a module.
+- Release module registration must be executable JavaScript code, not text inside comments, string literals, or regular-expression literals.
+- **Threads:** None; the active PR was reviewed and corrected directly.
+- **Validation:** The focused portable scanner test failed red on absent regular-
+  expression handling, then passed after the context-aware fix. JavaScript
+  regex, control-condition, postfix-division, and ambiguous-division fixtures
+  parsed successfully. Root and external-directory `make check` each passed 42
+  Make authority cases and 22 Python tests; `npm run check`, `git diff --check`,
+  and current-tree gitleaks also passed. Local `xcodebuild` is unavailable;
+  hosted macOS parsed the Xcode project, but neither baseline compiles the
+  Objective-C target or executes native XCTest.
+- **Hosted:** Both baseline runs and CodeQL Actions, JavaScript/TypeScript, and
+  Python analysis passed on correction head
+  `810e8668b35376bd52d86c50e9f490f93b7f81b8` before this evidence-only amend.
+- **Review:** Initial PR #14 merged at `a9dacf6` before this audit completed.
+  Post-merge manual review rejected its scanner for the regex-literal false
+  positive. `$codex-review` was invoked for the correction but OpenAI returned
+  HTTP 401 before analysis; the authentication-only exception applies.
+- **Next action:** Open a focused P1 correction PR, invoke exact-head review,
+  and merge only after the evidence-only replacement head is hosted-green.
 
 
 ## 2026-06-26 03:58 PDT

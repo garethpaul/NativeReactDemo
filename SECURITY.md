@@ -84,7 +84,7 @@ non-local JavaScript bundle URLs before `RCTRootView` startup.
 Reports should also note whether the exact bundle registration guard rejects
 malformed JavaScript that only mentions the module name without registering it,
 including longer prefix names such as `WowNativeReactPreview`.
-Release module registration must be executable JavaScript code, not text inside comments or string literals.
+Release module registration must be executable JavaScript code, not text inside comments, string literals, or regular-expression literals.
 Reports should also note whether the bundle module name guard rejects blank or
 whitespace-only expected module names before release bundle registration checks.
 Reports should also note whether the release bundle resource guard catches
