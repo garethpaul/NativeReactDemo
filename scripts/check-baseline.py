@@ -67,6 +67,7 @@ REQUIRED = [
     "docs/plans/2026-06-19-native-react-deep-review.md",
     "docs/plans/2026-06-21-spaced-makefile-path.md",
     "docs/plans/2026-06-25-exact-module-token-boundary.md",
+    "docs/plans/2026-06-27-lexical-module-registration.md",
 ]
 
 VENDORED_EXECUTABLES = {
@@ -181,6 +182,41 @@ def workflow_policy_errors(workflow: str) -> list[str]:
             continue
         if re.fullmatch(r"[^@\s]+@[0-9a-f]{40}", action_reference) is None:
             errors.append(f"workflow action must use a full commit pin: {action_reference}")
+    return errors
+
+
+def module_registration_scanner_errors(app_delegate: str, tests: str) -> list[str]:
+    errors = []
+    required_source = [
+        "skipJavaScriptTriviaInContents:",
+        "identifierAtIndex:",
+        "skipJavaScriptStringOrCommentInContents:",
+        "registration text inside comments and strings",
+        'matches:@"AppRegistry"',
+        'matches:@"registerComponent"',
+        "BOOL previousTokenWasDot = NO",
+        "if (previousTokenWasDot)",
+        "previousTokenWasDot = currentCharacter == '.'",
+        "character == '\\n' || character == '\\r'",
+        "first == '\\'' || first == '\"' || first == '`'",
+    ]
+    if any(fragment not in app_delegate for fragment in required_source):
+        errors.append("AppDelegate must lexically validate module registration outside comments and strings")
+    if "rangeOfString:singleQuotedRegistration" in app_delegate or "rangeOfString:doubleQuotedRegistration" in app_delegate:
+        errors.append("AppDelegate must not restore raw substring module registration checks")
+
+    required_tests = [
+        "testRejectsRegistrationTextInsideCommentsAndStrings",
+        "// AppRegistry.registerComponent('WowNativeReact',",
+        "/* AppRegistry.registerComponent(\\\"WowNativeReact\\\",",
+        "var diagnostic = \\\"AppRegistry.registerComponent('WowNativeReact',\\\"",
+        "bridge. /* trivia */ AppRegistry.registerComponent('WowNativeReact',",
+        "testAcceptsLexicalRegistrationWithWhitespace",
+        "AppRegistry /* bridge */ . registerComponent ( \\\"WowNativeReact\\\" ,",
+        "XCTAssertTrue([delegate isPlaceholderBundleAtURL:bundleURL]);",
+    ]
+    if any(fragment not in tests for fragment in required_tests):
+        errors.append("Xcode tests must cover lexical module registration and literal impersonation")
     return errors
 
 
@@ -308,13 +344,13 @@ def main() -> int:
     )
     if not has_blank_bundle_guard:
         failures.append("placeholder bundle helper must reject blank or whitespace-only bundle contents")
-    if "AppRegistry.registerComponent" not in app_delegate or "WowNativeReact" not in app_delegate:
+    if 'matches:@"AppRegistry"' not in app_delegate or 'matches:@"registerComponent"' not in app_delegate or "WowNativeReact" not in app_delegate:
         failures.append("placeholder bundle helper must reject release bundles without the expected module registration")
     if (
         'static NSString * const NativeReactModuleName = @"WowNativeReact";' not in app_delegate
         or "- (BOOL)bundleContents:(NSString *)bundleContents registersModule:(NSString *)moduleName" not in app_delegate
-        or "AppRegistry.registerComponent('%@'," not in app_delegate
-        or 'AppRegistry.registerComponent(\\"%@\\",' not in app_delegate
+        or 'matches:@"AppRegistry"' not in app_delegate
+        or 'matches:@"registerComponent"' not in app_delegate
         or "[self bundleContents:bundleContents registersModule:NativeReactModuleName]" not in app_delegate
         or "moduleName:NativeReactModuleName" not in app_delegate
     ):
@@ -322,8 +358,6 @@ def main() -> int:
     if (
         "NSString *trimmedModuleName = [moduleName stringByTrimmingCharactersInSet:" not in app_delegate
         or "trimmedModuleName.length == 0" not in app_delegate
-        or 'NSString *singleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\'%@\',", trimmedModuleName];' not in app_delegate
-        or 'NSString *doubleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\\"%@\\",", trimmedModuleName];' not in app_delegate
     ):
         failures.append("AppDelegate must reject blank bundle module names before registration checks")
     failures.extend(project_bundle_reference_errors(project))
@@ -364,6 +398,7 @@ def main() -> int:
         or "XCTAssertFalse([delegate bundleContents:bundleContents registersModule:@\"WowNativeReact\"]);" not in tests
     ):
         failures.append("Xcode tests must reject prefix-only React Native module registrations")
+    failures.extend(module_registration_scanner_errors(app_delegate, tests))
 
     info = plistlib.loads(read_bytes_file(ROOT / "iOS/Info.plist", MAXIMUM_TEXT_BYTES))
     if info.get("NSLocationWhenInUseUsageDescription") == "":
@@ -457,6 +492,10 @@ def main() -> int:
         failures.append("docs must mention release bundle file URL guard handling")
     if "exact bundle registration guard" not in docs:
         failures.append("docs must mention exact bundle registration guard handling")
+    lexical_guidance = "Release module registration must be executable JavaScript code, not text inside comments or string literals."
+    for relative_path in ["AGENTS.md", "README.md", "SECURITY.md", "VISION.md", "CHANGES.md"]:
+        if lexical_guidance not in " ".join(read(relative_path).split()):
+            failures.append(f"{relative_path} must preserve lexical module registration guidance")
     if "bundle module name guard" not in docs:
         failures.append("docs must mention bundle module name guard handling")
     if "release bundle resource guard" not in docs:
@@ -507,6 +546,9 @@ def main() -> int:
         failures.append(
             "release placeholder shape plan must record completed root, external, and mutation verification"
         )
+    lexical_plan = read("docs/plans/2026-06-27-lexical-module-registration.md")
+    if "status: completed" not in lexical_plan.lower() or "external-directory `make check`" not in lexical_plan:
+        failures.append("lexical module registration plan must record completed canonical verification")
 
     release_plan = read("docs/plans/2026-06-08-release-bundle-guard.md")
     if "status: completed" not in release_plan:

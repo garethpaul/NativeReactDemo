@@ -54,6 +54,7 @@
 - The bundle module guard treats release bundles without the expected `WowNativeReact` registration as unsafe.
 - Exact module registration checks require the closing quote and following
   argument comma, so names that only start with `WowNativeReact` remain unsafe.
+- Release module registration must be executable JavaScript code, not text inside comments or string literals.
 
 ## Agent workflow
 

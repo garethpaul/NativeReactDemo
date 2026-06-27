@@ -146,5 +146,36 @@ class ToolResolutionTests(unittest.TestCase):
         )
 
 
+class ModuleRegistrationScannerTests(unittest.TestCase):
+    def setUp(self):
+        self.app_delegate = (ROOT / "iOS" / "AppDelegate.m").read_text(encoding="utf-8")
+        self.native_tests = (ROOT / "WowNativeReactTests" / "WowNativeReactTests.m").read_text(encoding="utf-8")
+
+    def test_accepts_checked_in_lexical_scanner(self):
+        self.assertEqual(
+            check_baseline.module_registration_scanner_errors(self.app_delegate, self.native_tests),
+            [],
+        )
+
+    def test_rejects_restored_raw_substring_search(self):
+        mutated = self.app_delegate.replace(
+            "  // Scan JavaScript tokens so registration text inside comments and strings cannot pass.\n",
+            "  NSString *singleQuotedRegistration = @\"AppRegistry.registerComponent('WowNativeReact',\";\n"
+            "  if ([bundleContents rangeOfString:singleQuotedRegistration].location != NSNotFound) { return YES; }\n",
+            1,
+        )
+        self.assertNotEqual(
+            check_baseline.module_registration_scanner_errors(mutated, self.native_tests),
+            [],
+        )
+
+    def test_rejects_member_object_false_positive(self):
+        mutated = self.app_delegate.replace("    if (previousTokenWasDot) {", "    if (NO) {", 1)
+        self.assertNotEqual(
+            check_baseline.module_registration_scanner_errors(mutated, self.native_tests),
+            [],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

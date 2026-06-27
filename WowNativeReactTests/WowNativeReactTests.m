@@ -104,6 +104,32 @@
   XCTAssertFalse([delegate bundleContents:bundleContents registersModule:@"WowNativeReact"]);
 }
 
+- (void)testRejectsRegistrationTextInsideCommentsAndStrings
+{
+  NSArray *bundleContentsCases = @[
+    @"// AppRegistry.registerComponent('WowNativeReact', function() {});\n",
+    @"/* AppRegistry.registerComponent(\"WowNativeReact\", function() {}); */\n",
+    @"var diagnostic = \"AppRegistry.registerComponent('WowNativeReact',\";\n",
+    @"var bridge = {}; bridge. /* trivia */ AppRegistry.registerComponent('WowNativeReact', function() {});\n",
+  ];
+  AppDelegate *delegate = [[AppDelegate alloc] init];
+
+  for (NSString *bundleContents in bundleContentsCases) {
+    NSURL *bundleURL = [self temporaryBundleURLWithContents:bundleContents];
+    XCTAssertFalse([delegate bundleContents:bundleContents registersModule:@"WowNativeReact"]);
+    XCTAssertTrue([delegate isPlaceholderBundleAtURL:bundleURL]);
+    [self removeTemporaryBundleAtURL:bundleURL];
+  }
+}
+
+- (void)testAcceptsLexicalRegistrationWithWhitespace
+{
+  NSString *bundleContents = @"AppRegistry /* bridge */ . registerComponent ( \"WowNativeReact\" , function() {});\n";
+  AppDelegate *delegate = [[AppDelegate alloc] init];
+
+  XCTAssertTrue([delegate bundleContents:bundleContents registersModule:@"WowNativeReact"]);
+}
+
 - (BOOL)findSubviewInView:(UIView *)view matching:(BOOL(^)(UIView *view))test
 {
   if (test(view)) {

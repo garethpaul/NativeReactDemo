@@ -25,6 +25,112 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
 
 @implementation AppDelegate
 
+- (BOOL)isJavaScriptIdentifierCharacter:(unichar)character
+{
+  return (character >= 'a' && character <= 'z') ||
+      (character >= 'A' && character <= 'Z') ||
+      (character >= '0' && character <= '9') ||
+      character == '_' || character == '$';
+}
+
+- (BOOL)skipJavaScriptStringOrCommentInContents:(NSString *)contents index:(NSUInteger *)index
+{
+  NSUInteger length = contents.length;
+  if (*index >= length) {
+    return NO;
+  }
+
+  unichar first = [contents characterAtIndex:*index];
+  if (first == '\'' || first == '"' || first == '`') {
+    unichar quote = first;
+    *index += 1;
+    while (*index < length) {
+      unichar character = [contents characterAtIndex:*index];
+      *index += 1;
+      if (character == '\\' && *index < length) {
+        *index += 1;
+      } else if (character == quote) {
+        break;
+      }
+    }
+    return YES;
+  }
+
+  if (first != '/' || *index + 1 >= length) {
+    return NO;
+  }
+
+  unichar second = [contents characterAtIndex:*index + 1];
+  if (second == '/') {
+    *index += 2;
+    while (*index < length) {
+      unichar character = [contents characterAtIndex:*index];
+      *index += 1;
+      if (character == '\n' || character == '\r') {
+        break;
+      }
+    }
+    return YES;
+  }
+  if (second == '*') {
+    *index += 2;
+    while (*index + 1 < length) {
+      if ([contents characterAtIndex:*index] == '*' &&
+          [contents characterAtIndex:*index + 1] == '/') {
+        *index += 2;
+        return YES;
+      }
+      *index += 1;
+    }
+    *index = length;
+    return YES;
+  }
+  return NO;
+}
+
+- (void)skipJavaScriptTriviaInContents:(NSString *)contents index:(NSUInteger *)index
+{
+  NSCharacterSet *whitespace = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+  while (*index < contents.length) {
+    unichar character = [contents characterAtIndex:*index];
+    if ([whitespace characterIsMember:character]) {
+      *index += 1;
+      continue;
+    }
+    if (character == '/' && *index + 1 < contents.length) {
+      unichar next = [contents characterAtIndex:*index + 1];
+      if (next == '/' || next == '*') {
+        [self skipJavaScriptStringOrCommentInContents:contents index:index];
+        continue;
+      }
+    }
+    break;
+  }
+}
+
+- (BOOL)identifierAtIndex:(NSUInteger *)index
+               inContents:(NSString *)contents
+                   matches:(NSString *)identifier
+{
+  NSUInteger start = *index;
+  NSUInteger end = start + identifier.length;
+  if (end > contents.length ||
+      ![[contents substringWithRange:NSMakeRange(start, identifier.length)] isEqualToString:identifier]) {
+    return NO;
+  }
+  if (start > 0) {
+    unichar previous = [contents characterAtIndex:start - 1];
+    if ([self isJavaScriptIdentifierCharacter:previous]) {
+      return NO;
+    }
+  }
+  if (end < contents.length && [self isJavaScriptIdentifierCharacter:[contents characterAtIndex:end]]) {
+    return NO;
+  }
+  *index = end;
+  return YES;
+}
+
 - (BOOL)bundleContents:(NSString *)bundleContents registersModule:(NSString *)moduleName
 {
   if (bundleContents == nil || moduleName == nil) {
@@ -37,10 +143,82 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
     return NO;
   }
 
-  NSString *singleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent('%@',", trimmedModuleName];
-  NSString *doubleQuotedRegistration = [NSString stringWithFormat:@"AppRegistry.registerComponent(\"%@\",", trimmedModuleName];
-  return [bundleContents rangeOfString:singleQuotedRegistration].location != NSNotFound ||
-      [bundleContents rangeOfString:doubleQuotedRegistration].location != NSNotFound;
+  // Scan JavaScript tokens so registration text inside comments and strings cannot pass.
+  NSUInteger index = 0;
+  BOOL previousTokenWasDot = NO;
+  NSCharacterSet *javascriptWhitespace = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+  while (index < bundleContents.length) {
+    unichar currentCharacter = [bundleContents characterAtIndex:index];
+    if ([javascriptWhitespace characterIsMember:currentCharacter]) {
+      index += 1;
+      continue;
+    }
+    BOOL currentTokenIsString = currentCharacter == '\'' || currentCharacter == '"' || currentCharacter == '`';
+    if ([self skipJavaScriptStringOrCommentInContents:bundleContents index:&index]) {
+      if (currentTokenIsString) {
+        previousTokenWasDot = NO;
+      }
+      continue;
+    }
+
+    NSUInteger candidate = index;
+    if (previousTokenWasDot) {
+      previousTokenWasDot = NO;
+      index += 1;
+      continue;
+    }
+    if (![self identifierAtIndex:&candidate inContents:bundleContents matches:@"AppRegistry"]) {
+      previousTokenWasDot = currentCharacter == '.';
+      index += 1;
+      continue;
+    }
+    previousTokenWasDot = NO;
+    [self skipJavaScriptTriviaInContents:bundleContents index:&candidate];
+    if (candidate >= bundleContents.length || [bundleContents characterAtIndex:candidate] != '.') {
+      index += 1;
+      continue;
+    }
+    candidate += 1;
+    [self skipJavaScriptTriviaInContents:bundleContents index:&candidate];
+    if (![self identifierAtIndex:&candidate inContents:bundleContents matches:@"registerComponent"]) {
+      index += 1;
+      continue;
+    }
+    [self skipJavaScriptTriviaInContents:bundleContents index:&candidate];
+    if (candidate >= bundleContents.length || [bundleContents characterAtIndex:candidate] != '(') {
+      index += 1;
+      continue;
+    }
+    candidate += 1;
+    [self skipJavaScriptTriviaInContents:bundleContents index:&candidate];
+    if (candidate >= bundleContents.length) {
+      return NO;
+    }
+    unichar quote = [bundleContents characterAtIndex:candidate];
+    if (quote != '\'' && quote != '"') {
+      index += 1;
+      continue;
+    }
+    candidate += 1;
+    if (candidate + trimmedModuleName.length >= bundleContents.length ||
+        ![[bundleContents substringWithRange:NSMakeRange(candidate, trimmedModuleName.length)]
+            isEqualToString:trimmedModuleName]) {
+      index += 1;
+      continue;
+    }
+    candidate += trimmedModuleName.length;
+    if ([bundleContents characterAtIndex:candidate] != quote) {
+      index += 1;
+      continue;
+    }
+    candidate += 1;
+    [self skipJavaScriptTriviaInContents:bundleContents index:&candidate];
+    if (candidate < bundleContents.length && [bundleContents characterAtIndex:candidate] == ',') {
+      return YES;
+    }
+    index += 1;
+  }
+  return NO;
 }
 
 - (BOOL)bundleContentsMatchReleasePlaceholder:(NSString *)bundleContents
