@@ -130,6 +130,49 @@
   XCTAssertTrue([delegate bundleContents:bundleContents registersModule:@"WowNativeReact"]);
 }
 
+- (void)testRejectsRegistrationTextInsideRegularExpression
+{
+  NSString *bundleContents = @"var diagnostic = /AppRegistry.registerComponent('WowNativeReact',.*)/;\n";
+  AppDelegate *delegate = [[AppDelegate alloc] init];
+  NSURL *bundleURL = [self temporaryBundleURLWithContents:bundleContents];
+
+  XCTAssertFalse([delegate bundleContents:bundleContents registersModule:@"WowNativeReact"]);
+  XCTAssertTrue([delegate isPlaceholderBundleAtURL:bundleURL]);
+  [self removeTemporaryBundleAtURL:bundleURL];
+}
+
+- (void)testAcceptsRegistrationAfterDivisionExpression
+{
+  NSString *bundleContents = @"var ratio = total / count;\nAppRegistry.registerComponent('WowNativeReact', function() {});\n";
+  AppDelegate *delegate = [[AppDelegate alloc] init];
+
+  XCTAssertTrue([delegate bundleContents:bundleContents registersModule:@"WowNativeReact"]);
+}
+
+- (void)testRejectsRegularExpressionAfterControlCondition
+{
+  NSString *bundleContents = @"if (ready) /AppRegistry.registerComponent('WowNativeReact',.*)/.test(source);\n";
+  AppDelegate *delegate = [[AppDelegate alloc] init];
+
+  XCTAssertFalse([delegate bundleContents:bundleContents registersModule:@"WowNativeReact"]);
+}
+
+- (void)testAcceptsRegistrationAfterPostfixDivisionExpression
+{
+  NSString *bundleContents = @"var ratio = total++ / count;\nAppRegistry.registerComponent('WowNativeReact', function() {});\n";
+  AppDelegate *delegate = [[AppDelegate alloc] init];
+
+  XCTAssertTrue([delegate bundleContents:bundleContents registersModule:@"WowNativeReact"]);
+}
+
+- (void)testAcceptsRegistrationAfterAmbiguousDivisionExpression
+{
+  NSString *bundleContents = @"var ratio = {} / count;\nAppRegistry.registerComponent('WowNativeReact', function() {});\n";
+  AppDelegate *delegate = [[AppDelegate alloc] init];
+
+  XCTAssertTrue([delegate bundleContents:bundleContents registersModule:@"WowNativeReact"]);
+}
+
 - (BOOL)findSubviewInView:(UIView *)view matching:(BOOL(^)(UIView *view))test
 {
   if (test(view)) {

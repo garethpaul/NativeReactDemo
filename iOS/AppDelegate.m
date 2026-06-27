@@ -108,6 +108,47 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
   }
 }
 
+- (BOOL)skipJavaScriptRegularExpressionInContents:(NSString *)contents index:(NSUInteger *)index
+{
+  NSUInteger length = contents.length;
+  if (*index >= length || [contents characterAtIndex:*index] != '/') {
+    return NO;
+  }
+
+  NSUInteger regularExpressionStart = *index;
+  *index += 1;
+  BOOL insideCharacterClass = NO;
+  while (*index < length) {
+    unichar character = [contents characterAtIndex:*index];
+    *index += 1;
+    if (character == '\n' || character == '\r') {
+      *index = regularExpressionStart;
+      return NO;
+    }
+    if (character == '\\' && *index < length) {
+      *index += 1;
+      continue;
+    }
+    if (character == '[') {
+      insideCharacterClass = YES;
+      continue;
+    }
+    if (character == ']' && insideCharacterClass) {
+      insideCharacterClass = NO;
+      continue;
+    }
+    if (character == '/' && !insideCharacterClass) {
+      while (*index < length &&
+             [self isJavaScriptIdentifierCharacter:[contents characterAtIndex:*index]]) {
+        *index += 1;
+      }
+      return YES;
+    }
+  }
+  *index = regularExpressionStart;
+  return NO;
+}
+
 - (BOOL)identifierAtIndex:(NSUInteger *)index
                inContents:(NSString *)contents
                    matches:(NSString *)identifier
@@ -144,9 +185,18 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
   }
 
   // Scan JavaScript tokens so registration text inside comments and strings cannot pass.
+  // Reject registration text inside regular expressions as non-code.
   NSUInteger index = 0;
   BOOL previousTokenWasDot = NO;
+  BOOL canStartRegularExpression = YES;
+  BOOL nextParenthesisStartsControlHeader = NO;
   NSCharacterSet *javascriptWhitespace = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+  NSMutableArray *parenthesisContexts = [NSMutableArray array];
+  NSSet *regularExpressionPrefixKeywords = [NSSet setWithObjects:
+      @"await", @"case", @"delete", @"do", @"else", @"in", @"instanceof", @"new",
+      @"of", @"return", @"throw", @"typeof", @"void", @"yield", nil];
+  NSSet *regularExpressionControlKeywords = [NSSet setWithObjects:
+      @"catch", @"for", @"if", @"switch", @"while", @"with", nil];
   while (index < bundleContents.length) {
     unichar currentCharacter = [bundleContents characterAtIndex:index];
     if ([javascriptWhitespace characterIsMember:currentCharacter]) {
@@ -157,22 +207,79 @@ static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 10
     if ([self skipJavaScriptStringOrCommentInContents:bundleContents index:&index]) {
       if (currentTokenIsString) {
         previousTokenWasDot = NO;
+        canStartRegularExpression = NO;
+        nextParenthesisStartsControlHeader = NO;
       }
+      continue;
+    }
+    if (currentCharacter == '/' && canStartRegularExpression &&
+        [self skipJavaScriptRegularExpressionInContents:bundleContents index:&index]) {
+      previousTokenWasDot = NO;
+      canStartRegularExpression = NO;
+      nextParenthesisStartsControlHeader = NO;
       continue;
     }
 
     NSUInteger candidate = index;
     if (previousTokenWasDot) {
       previousTokenWasDot = NO;
+      canStartRegularExpression = NO;
+      nextParenthesisStartsControlHeader = NO;
       index += 1;
       continue;
     }
     if (![self identifierAtIndex:&candidate inContents:bundleContents matches:@"AppRegistry"]) {
+      if ([self isJavaScriptIdentifierCharacter:currentCharacter]) {
+        NSUInteger identifierStart = index;
+        while (index < bundleContents.length &&
+               [self isJavaScriptIdentifierCharacter:[bundleContents characterAtIndex:index]]) {
+          index += 1;
+        }
+        NSString *identifier = [bundleContents substringWithRange:
+                                NSMakeRange(identifierStart, index - identifierStart)];
+        canStartRegularExpression = [regularExpressionPrefixKeywords containsObject:identifier];
+        nextParenthesisStartsControlHeader = [regularExpressionControlKeywords containsObject:identifier];
+        previousTokenWasDot = NO;
+        continue;
+      }
+      if (currentCharacter == '(') {
+        [parenthesisContexts addObject:[NSNumber numberWithBool:nextParenthesisStartsControlHeader]];
+        canStartRegularExpression = YES;
+        previousTokenWasDot = NO;
+        nextParenthesisStartsControlHeader = NO;
+        index += 1;
+        continue;
+      }
+      if (currentCharacter == ')') {
+        BOOL closesControlHeader = NO;
+        if (parenthesisContexts.count > 0) {
+          closesControlHeader = [[parenthesisContexts lastObject] boolValue];
+          [parenthesisContexts removeLastObject];
+        }
+        canStartRegularExpression = closesControlHeader;
+        previousTokenWasDot = NO;
+        nextParenthesisStartsControlHeader = NO;
+        index += 1;
+        continue;
+      }
+      if ((currentCharacter == '+' || currentCharacter == '-') &&
+          index + 1 < bundleContents.length &&
+          [bundleContents characterAtIndex:index + 1] == currentCharacter) {
+        canStartRegularExpression = NO;
+        previousTokenWasDot = NO;
+        nextParenthesisStartsControlHeader = NO;
+        index += 2;
+        continue;
+      }
       previousTokenWasDot = currentCharacter == '.';
+      canStartRegularExpression = currentCharacter != ')' && currentCharacter != ']' &&
+          currentCharacter != '.';
+      nextParenthesisStartsControlHeader = NO;
       index += 1;
       continue;
     }
     previousTokenWasDot = NO;
+    nextParenthesisStartsControlHeader = NO;
     [self skipJavaScriptTriviaInContents:bundleContents index:&candidate];
     if (candidate >= bundleContents.length || [bundleContents characterAtIndex:candidate] != '.') {
       index += 1;
