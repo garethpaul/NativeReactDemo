@@ -24,7 +24,8 @@ even though React Native would never execute that text as a call.
 Scan bounded UTF-8 bundle contents as JavaScript lexical states. Skip line and
 block comments; single-, double-, and template-quoted strings; and bounded
 regular-expression bodies when the preceding token permits an expression.
-Preserve ordinary division operators. In code, require the global
+Preserve ordinary division operators and restricted-statement line terminators,
+including optional `break` and `continue` labels. In code, require the global
 `AppRegistry` identifier, dot member access,
 `registerComponent`, an opening parenthesis, the exact quoted module name, and
 the following comma. Allow whitespace and comments between code tokens.
@@ -32,14 +33,15 @@ the following comma. Allow whitespace and comments between code tokens.
 ## Verification
 
 Native XCTest rejects registration text inside comments, strings, a regular
-expression, and a comment-separated member object while accepting a real
-trivia-separated call after an ordinary division expression. Portable tests
-reject restoration of raw substring matching and removal of the global-object,
-regular-expression, or division-context boundaries. Canonical root and
-external-directory `make check` each passed 42 Make authority cases and 22
-Python tests. `npm run check`, JavaScript fixture parsing, `git diff --check`,
-and current-tree gitleaks passed; hosted macOS remains authoritative for Xcode
-project parsing. The maintained baseline does not compile the Objective-C target
-or execute native XCTest; adding a synthetic-header compile would not represent
-the legacy project's real dependency graph, and a full React Native 0.4.2 build
-is not reproducible in this correction scope.
+expression, control-condition regex statements, semicolon-less restricted
+statements, labels, multiline label comments, and a comment-separated member
+object while accepting real calls after ordinary and ambiguous division.
+Portable tests reject restoration of raw substring matching and removal of the
+global-object, regular-expression, restricted-statement, or division-context
+boundaries. Canonical root and external-directory `make check` each passed 42
+Make authority cases and 25 Python tests. `npm run check`, JavaScript fixture
+parsing, `git diff --check`, and current-tree gitleaks passed. Hosted macOS
+parses the Xcode project, but the maintained baseline does not compile the
+Objective-C target or execute native XCTest; adding a synthetic-header compile
+would not represent the legacy project's real dependency graph, and a full
+React Native 0.4.2 build is not reproducible in this correction scope.

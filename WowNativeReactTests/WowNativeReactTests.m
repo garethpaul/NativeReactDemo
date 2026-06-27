@@ -157,6 +157,21 @@
   XCTAssertFalse([delegate bundleContents:bundleContents registersModule:@"WowNativeReact"]);
 }
 
+- (void)testRejectsRegularExpressionAfterRestrictedStatement
+{
+  NSArray *bundleContentsCases = @[
+    @"while (ready) { break\n/AppRegistry.registerComponent('WowNativeReact',.*)/.test(source); }\n",
+    @"outer: while (ready) { continue outer\n/AppRegistry.registerComponent('WowNativeReact',.*)/.test(source); }\n",
+    @"outer: while (ready) { break outer /* label comment\n*/ /AppRegistry.registerComponent('WowNativeReact',.*)/.test(source); }\n",
+    @"debugger\n/AppRegistry.registerComponent('WowNativeReact',.*)/.test(source);\n",
+  ];
+  AppDelegate *delegate = [[AppDelegate alloc] init];
+
+  for (NSString *bundleContents in bundleContentsCases) {
+    XCTAssertFalse([delegate bundleContents:bundleContents registersModule:@"WowNativeReact"]);
+  }
+}
+
 - (void)testAcceptsRegistrationAfterPostfixDivisionExpression
 {
   NSString *bundleContents = @"var ratio = total++ / count;\nAppRegistry.registerComponent('WowNativeReact', function() {});\n";
