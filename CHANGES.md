@@ -1,5 +1,19 @@
 # Changes
 
+## 2026-07-09 - P2 - Python 3.8 baseline annotation compatibility
+
+- **Summary:** The pinned `/usr/bin/python3` baseline gate failed on Python 3.8
+  hosts because `list[str]` return annotations require PEP 585 (Python 3.9+)
+  unless postponed evaluation is enabled.
+- **Work:** Added `from __future__ import annotations` at the top of
+  `scripts/check-baseline.py` so annotations are not evaluated at definition
+  time on the repository-owned Python 3.8 runner path.
+- **Tests:** No new behavioral contracts; existing import-time loading of
+  `check-baseline.py` under `/usr/bin/python3 -I -B` is the regression path.
+- **Validation:** `/usr/bin/python3 -I -B` imports the module successfully;
+  `make check` passed 42 Make authority cases and 26 Python tests on Python
+  3.8.10. Hosted macOS was not re-run locally (xcodebuild unavailable).
+
 ## 2026-06-26 18:24 PDT - P1 - Lexically validate release module registration
 
 - **Summary:** Release startup now recognizes `WowNativeReact` registration
