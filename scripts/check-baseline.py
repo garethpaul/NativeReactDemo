@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Static baseline checks for the legacy React Native iOS demo."""
 
+from __future__ import annotations
+
 from pathlib import Path
 import hashlib
 import json
