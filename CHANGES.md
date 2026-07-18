@@ -1,5 +1,33 @@
 # Changes
 
+## 2026-07-18 - P1 - Verify the effective release bound and close the test discovery surface
+
+- **Summary:** The release bundle size guard was pinned by spelling, not by
+  value. Appending `* 1024ULL` at either the `MaximumReleaseBundleBytes`
+  definition or its use site kept the pinned substrings intact while widening the
+  effective bound 1024x to 10 GiB, and `make check` exited 0; the same pin
+  rejected the identical limit written `10485760ULL`. Separately, the `tests/`
+  discovery surface was open, so adding a `test_*.py` that rebound
+  `unittest.TestCase` assertions to no-ops turned a genuinely caught defect green
+  without editing any pinned file.
+- **Work:** Added `release_bundle_bound_errors`, which requires exactly one
+  anchored definition, evaluates the constant expression with a bounded
+  literal/add/multiply evaluator, and compares it against the existing
+  `MAXIMUM_RELEASE_BUNDLE_BYTES`; it also requires exactly one anchored use-site
+  comparison. The fail-closed ordering chain now derives its indices from those
+  anchored matches. Added `discovery_inventory_errors`, a recursive closed-world
+  inventory of `tests/` modelled on the existing `.github/workflows` inventory.
+- **Tests:** 13 new portable tests covering both directions: equivalent bound
+  spellings are accepted, and widening at the definition, at the use site, or via
+  a second definition is rejected, as are extra and nested-package test modules.
+  Gutting either new checker to `return []` fails these tests.
+- **Validation:** `make check` passed 42 Make authority cases and 39 Python
+  tests, up from 26. Base-versus-fix mutation evidence is tabulated in
+  `docs/plans/2026-07-18-effective-bound-and-discovery-surface.md`. Hosted macOS
+  was not re-run locally (xcodebuild unavailable), so the bound remains verified
+  by source analysis rather than Objective-C runtime execution, unchanged from
+  the existing baseline.
+
 ## 2026-07-09 - P2 - Python 3.8 baseline annotation compatibility
 
 - **Summary:** The pinned `/usr/bin/python3` baseline gate failed on Python 3.8

@@ -81,6 +81,111 @@ class ProjectReferenceTests(unittest.TestCase):
         self.assertNotEqual(check_baseline.project_bundle_reference_errors(project), [])
 
 
+class ReleaseBundleBoundTests(unittest.TestCase):
+    def setUp(self):
+        self.app_delegate = (ROOT / "iOS" / "AppDelegate.m").read_text(encoding="utf-8")
+
+    def test_accepts_checked_in_release_bundle_bound(self):
+        self.assertEqual(check_baseline.release_bundle_bound_errors(self.app_delegate), [])
+
+    def test_accepts_equivalent_bound_spelling(self):
+        mutated = self.app_delegate.replace(
+            "MaximumReleaseBundleBytes = 10ULL * 1024ULL * 1024ULL;",
+            "MaximumReleaseBundleBytes = 10485760ULL;",
+            1,
+        )
+        self.assertNotEqual(mutated, self.app_delegate)
+        self.assertEqual(check_baseline.release_bundle_bound_errors(mutated), [])
+
+    def test_rejects_widened_bound_definition(self):
+        mutated = self.app_delegate.replace(
+            "MaximumReleaseBundleBytes = 10ULL * 1024ULL * 1024ULL;",
+            "MaximumReleaseBundleBytes = 10ULL * 1024ULL * 1024ULL * 1024ULL;",
+            1,
+        )
+        self.assertNotEqual(mutated, self.app_delegate)
+        self.assertNotEqual(check_baseline.release_bundle_bound_errors(mutated), [])
+
+    def test_rejects_widened_bound_at_use_site(self):
+        mutated = self.app_delegate.replace(
+            "[bundleSize unsignedLongLongValue] > MaximumReleaseBundleBytes) {",
+            "[bundleSize unsignedLongLongValue] > MaximumReleaseBundleBytes * 1024ULL) {",
+            1,
+        )
+        self.assertNotEqual(mutated, self.app_delegate)
+        self.assertNotEqual(check_baseline.release_bundle_bound_errors(mutated), [])
+
+    def test_rejects_second_bound_definition(self):
+        mutated = self.app_delegate.replace(
+            "static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 1024ULL;",
+            "static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 1024ULL;\n"
+            "static const unsigned long long MaximumReleaseBundleBytes = 10ULL * 1024ULL * 1024ULL * 1024ULL;",
+            1,
+        )
+        self.assertNotEqual(mutated, self.app_delegate)
+        self.assertNotEqual(check_baseline.release_bundle_bound_errors(mutated), [])
+
+    def test_rejects_removed_bound_comparison(self):
+        mutated = self.app_delegate.replace(
+            "[bundleSize unsignedLongLongValue] > MaximumReleaseBundleBytes) {",
+            "NO) {",
+            1,
+        )
+        self.assertNotEqual(mutated, self.app_delegate)
+        self.assertNotEqual(check_baseline.release_bundle_bound_errors(mutated), [])
+
+    def test_rejects_non_arithmetic_bound_expression(self):
+        with self.assertRaises(check_baseline.ValidationError):
+            check_baseline.objc_unsigned_expression_value("configuredLimit()")
+
+    def test_rejects_exponentiation_bound_expression(self):
+        with self.assertRaises(check_baseline.ValidationError):
+            check_baseline.objc_unsigned_expression_value("9 ** 9 ** 9")
+
+    def test_evaluates_equivalent_spellings_identically(self):
+        self.assertEqual(
+            check_baseline.objc_unsigned_expression_value("10ULL * 1024ULL * 1024ULL"),
+            check_baseline.objc_unsigned_expression_value("10485760ULL"),
+        )
+
+
+class DiscoveryInventoryTests(unittest.TestCase):
+    def test_accepts_checked_in_discovery_surface(self):
+        self.assertEqual(check_baseline.discovery_inventory_errors(ROOT), [])
+
+    def _build_surface(self, root):
+        (root / "tests").mkdir()
+        (root / "tests" / "__init__.py").write_text("", encoding="utf-8")
+        (root / "tests" / "test_check_baseline.py").write_text("", encoding="utf-8")
+
+    def test_rejects_extra_discovered_test_module(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._build_surface(root)
+            (root / "tests" / "test_aaa_shadow.py").write_text("", encoding="utf-8")
+
+            self.assertNotEqual(check_baseline.discovery_inventory_errors(root), [])
+
+    def test_rejects_nested_discovered_test_package(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._build_surface(root)
+            nested = root / "tests" / "sub"
+            nested.mkdir()
+            (nested / "__init__.py").write_text("", encoding="utf-8")
+            (nested / "test_shadow.py").write_text("", encoding="utf-8")
+
+            self.assertNotEqual(check_baseline.discovery_inventory_errors(root), [])
+
+    def test_rejects_missing_test_module(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "tests").mkdir()
+            (root / "tests" / "__init__.py").write_text("", encoding="utf-8")
+
+            self.assertNotEqual(check_baseline.discovery_inventory_errors(root), [])
+
+
 class WorkflowPolicyTests(unittest.TestCase):
     def setUp(self):
         self.workflow = """name: Check

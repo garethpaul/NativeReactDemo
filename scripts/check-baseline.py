@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import ast
 import hashlib
 import json
 import os
@@ -79,6 +80,27 @@ VENDORED_EXECUTABLES = {
     "Crashlytics.framework/run",
     "Crashlytics.framework/submit",
 }
+
+# The unittest discovery surface. `python3 -m unittest discover -s tests` imports every
+# `test_*.py` under this directory, including nested packages, so an unpinned extra file
+# here can rebind the assertion methods the suite relies on. Pinning the two expected
+# files' contents cannot constrain a file that does not exist yet, so the inventory is
+# closed-world and recursive.
+EXPECTED_TEST_ENTRIES = [
+    "tests/__init__.py",
+    "tests/test_check_baseline.py",
+]
+
+# The release bundle size bound is validated by effective value, not by spelling: a
+# substring pin on `10ULL * 1024ULL * 1024ULL` still matches after a `* 1024ULL` append.
+RELEASE_BUNDLE_BOUND_DEFINITION = re.compile(
+    r"^static const unsigned long long MaximumReleaseBundleBytes\s*=\s*([^;]+);[ \t]*$",
+    re.MULTILINE,
+)
+RELEASE_BUNDLE_BOUND_COMPARISON = re.compile(
+    r"^[ \t]*\[bundleSize unsignedLongLongValue\] > MaximumReleaseBundleBytes\)[ \t]*\{[ \t]*$",
+    re.MULTILINE,
+)
 
 
 class ValidationError(ValueError):
@@ -157,6 +179,86 @@ def sha256_regular_file(path: Path, maximum_bytes: int) -> str:
     finally:
         os.close(descriptor)
     return digest.hexdigest()
+
+
+def objc_unsigned_expression_value(expression: str) -> int:
+    """Evaluate a bounded unsigned integer constant expression from Objective-C source.
+
+    Only decimal literals joined by addition and multiplication are supported, so the
+    checker never evaluates attacker-chosen code and never widens a bound implicitly.
+    """
+    normalized = re.sub(r"(?<=\d)(?:ULL|UL|LL|U|L)\b", "", expression.strip())
+    if re.fullmatch(r"[0-9\s*+()]+", normalized) is None:
+        raise ValidationError(f"unsupported release bundle bound expression: {expression.strip()}")
+    try:
+        tree = ast.parse(normalized, mode="eval")
+    except SyntaxError as error:
+        raise ValidationError(
+            f"unsupported release bundle bound expression: {expression.strip()}"
+        ) from error
+
+    def evaluate(node: ast.AST) -> int:
+        if isinstance(node, ast.Expression):
+            return evaluate(node.body)
+        if isinstance(node, ast.Constant) and isinstance(node.value, int) and not isinstance(node.value, bool):
+            return node.value
+        if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mult)):
+            left = evaluate(node.left)
+            right = evaluate(node.right)
+            return left + right if isinstance(node.op, ast.Add) else left * right
+        raise ValidationError(f"unsupported release bundle bound expression: {expression.strip()}")
+
+    return evaluate(tree)
+
+
+def release_bundle_bound_errors(app_delegate: str) -> list[str]:
+    """Pin the effective release bundle size bound at its definition and its use site."""
+    errors = []
+    definitions = RELEASE_BUNDLE_BOUND_DEFINITION.findall(app_delegate)
+    if len(definitions) != 1:
+        errors.append(
+            "AppDelegate must define MaximumReleaseBundleBytes exactly once "
+            f"(found {len(definitions)})"
+        )
+    else:
+        try:
+            bound = objc_unsigned_expression_value(definitions[0])
+        except ValidationError as error:
+            errors.append(str(error))
+        else:
+            if bound != MAXIMUM_RELEASE_BUNDLE_BYTES:
+                errors.append(
+                    "AppDelegate release bundle size limit must equal "
+                    f"{MAXIMUM_RELEASE_BUNDLE_BYTES} bytes (found {bound})"
+                )
+    if len(RELEASE_BUNDLE_BOUND_COMPARISON.findall(app_delegate)) != 1:
+        errors.append(
+            "AppDelegate must compare the release bundle size against MaximumReleaseBundleBytes "
+            "exactly once, without widening the bound at the use site"
+        )
+    return errors
+
+
+def discovery_inventory_errors(root: Path) -> list[str]:
+    """Close the world on the unittest discovery surface under tests/."""
+    try:
+        entries = sorted(path.relative_to(root).as_posix() for path in (root / "tests").rglob("*"))
+    except OSError as error:
+        return [f"could not inspect the tests discovery surface: {error}"]
+    if entries == EXPECTED_TEST_ENTRIES:
+        return []
+    unexpected = [entry for entry in entries if entry not in EXPECTED_TEST_ENTRIES]
+    missing = [entry for entry in EXPECTED_TEST_ENTRIES if entry not in entries]
+    details = []
+    if unexpected:
+        details.append("unexpected: " + ", ".join(unexpected))
+    if missing:
+        details.append("missing: " + ", ".join(missing))
+    return [
+        "tests inventory must contain exactly the pinned discovery surface ("
+        + "; ".join(details)
+        + ")"
+    ]
 
 
 def project_bundle_reference_errors(project: str) -> list[str]:
@@ -368,11 +470,14 @@ def main() -> int:
         failures.append("placeholder bundle helper must fail closed when called with a nil URL")
     if "![bundleURL isFileURL]" not in app_delegate:
         failures.append("placeholder bundle helper must fail closed when release bundle URL is not local")
-    size_limit_index = app_delegate.find("MaximumReleaseBundleBytes = 10ULL * 1024ULL * 1024ULL")
+    failures.extend(release_bundle_bound_errors(app_delegate))
+    bound_definition = RELEASE_BUNDLE_BOUND_DEFINITION.search(app_delegate)
+    bound_comparison = RELEASE_BUNDLE_BOUND_COMPARISON.search(app_delegate)
+    size_limit_index = bound_definition.start() if bound_definition is not None else -1
     attributes_index = app_delegate.find("attributesOfItemAtPath:[bundleURL path]")
     file_type_index = app_delegate.find("NSString *bundleType = [bundleAttributes objectForKey:NSFileType]")
     regular_file_guard_index = app_delegate.find("![bundleType isEqualToString:NSFileTypeRegular]")
-    size_guard_index = app_delegate.find("[bundleSize unsignedLongLongValue] > MaximumReleaseBundleBytes")
+    size_guard_index = bound_comparison.start() if bound_comparison is not None else -1
     contents_read_index = app_delegate.find("stringWithContentsOfURL:bundleURL")
     if not (
         0 <= size_limit_index < attributes_index < file_type_index
@@ -670,6 +775,7 @@ def main() -> int:
     )
     if workflow_files != [".github/workflows/check.yml"]:
         failures.append("workflow inventory must contain only .github/workflows/check.yml")
+    failures.extend(discovery_inventory_errors(ROOT))
     checkout_step = (
         "      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10\n"
         "        with:\n"
